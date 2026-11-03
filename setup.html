@@ -49,6 +49,7 @@
     <label for="data-json">Données en clair (JSON : tableau de candidatures) — à coller ou charger
       <textarea id="data-json" name="data-json" spellcheck="false" autocomplete="off" required placeholder='[{"poste": "…", "entreprise": "…", "secteur": "…", "ville": "…", "date": "2026-11-01", "trajet": 15, "statut": "En cours d&#39;examen"}]'></textarea>
     </label>
+    <p class="note">Champs obligatoires : poste, entreprise, secteur, date (AAAA-MM-JJ), statut (« Refusée », « En cours d'examen » ou « Validée »). Facultatifs (texte ou null) : ville, trajet (minutes ou null), type_contrat, mode_travail, salaire, source, recruteur, date_relance et date_limite (AAAA-MM-JJ), note, preuve et source_detail (non affichés), ambigu (true/false), historique (tableau de {"date": "AAAA-MM-JJ", "statut": …}).</p>
     <p class="note">Chiffrement : Argon2id (64 Mio, 3 passes, p=1) puis AES-256-GCM, sel et IV aléatoires à chaque fichier. Le mot de passe n'est ni stocké, ni affiché, ni transmis.</p>
     <button type="submit" id="encrypt-btn">Chiffrer et télécharger</button>
     <p id="status" role="status" aria-live="polite"></p>
@@ -122,13 +123,44 @@
   }
 
   // Vérifie qu'un texte JSON a la structure attendue par le tableau de bord.
-  const CHAMPS = ["poste", "entreprise", "secteur", "ville", "date", "trajet", "statut"];
+  // Obligatoires : poste, entreprise, secteur, date, statut.
+  // Facultatifs (texte ou null) : ville (vide autorisé), trajet (nombre ou null), type_contrat, mode_travail, salaire,
+  // source, recruteur, date_relance et date_limite (AAAA-MM-JJ ou null), note,
+  // preuve et source_detail (jamais affichés), ambigu (booléen ou null),
+  // historique (null ou tableau de { date: "AAAA-MM-JJ", statut }).
+  const CHAMPS = ["poste", "entreprise", "secteur", "date", "statut"];
+  const FACULTATIFS = ["ville", "type_contrat", "mode_travail", "salaire", "source", "recruteur", "date_relance", "date_limite", "note", "preuve", "source_detail"];
+  const STATUTS_VALIDES = ["Refusée", "En cours d'examen", "Validée"];
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
   function validerDonnees(data) {
     if (!Array.isArray(data)) throw new Error("Le JSON doit être un tableau de candidatures.");
     data.forEach((c, i) => {
-      if (!c || typeof c !== "object") throw new Error(`Entrée ${i + 1} : objet attendu.`);
-      for (const k of CHAMPS) if (!(k in c)) throw new Error(`Entrée ${i + 1} : champ « ${k} » manquant.`);
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(c.date))) throw new Error(`Entrée ${i + 1} : date au format AAAA-MM-JJ attendue.`);
+      const n = `Entrée ${i + 1}`;
+      if (!c || typeof c !== "object" || Array.isArray(c)) throw new Error(`${n} : objet attendu.`);
+      for (const k of CHAMPS) {
+        if (typeof c[k] !== "string" || !c[k].trim()) throw new Error(`${n} : champ « ${k} » manquant ou vide.`);
+      }
+      if (!DATE_RE.test(c.date)) throw new Error(`${n} : date au format AAAA-MM-JJ attendue.`);
+      if (!STATUTS_VALIDES.includes(c.statut)) throw new Error(`${n} : statut « ${c.statut} » inconnu (attendu : ${STATUTS_VALIDES.join(", ")}).`);
+      if (c.trajet != null && !(typeof c.trajet === "number" && Number.isFinite(c.trajet) && c.trajet >= 0)) {
+        throw new Error(`${n} : « trajet » doit être un nombre de minutes ou null.`);
+      }
+      for (const k of FACULTATIFS) {
+        if (c[k] != null && typeof c[k] !== "string") throw new Error(`${n} : « ${k} » doit être un texte ou null.`);
+      }
+      for (const k of ["date_relance", "date_limite"]) {
+        if (c[k] != null && c[k] !== "" && !DATE_RE.test(c[k])) throw new Error(`${n} : « ${k} » au format AAAA-MM-JJ ou null attendu.`);
+      }
+      if (c.ambigu != null && typeof c.ambigu !== "boolean") throw new Error(`${n} : « ambigu » doit être true, false ou null.`);
+      if (c.historique != null) {
+        if (!Array.isArray(c.historique)) throw new Error(`${n} : « historique » doit être un tableau ou null.`);
+        c.historique.forEach((h, j) => {
+          if (!h || typeof h !== "object" || typeof h.date !== "string" || !DATE_RE.test(h.date)) {
+            throw new Error(`${n} : historique[${j}] : date au format AAAA-MM-JJ attendue.`);
+          }
+          if (!STATUTS_VALIDES.includes(h.statut)) throw new Error(`${n} : historique[${j}] : statut « ${h.statut} » inconnu.`);
+        });
+      }
     });
     return data;
   }

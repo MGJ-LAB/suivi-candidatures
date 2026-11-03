@@ -7,12 +7,38 @@ Maquette d'un outil simple pour suivre ses candidatures à des offres d'emploi. 
 - **Statuts** colorés : « Refusée » (rouge), « En cours d'examen » (orange), « Validée » (vert), avec compteurs par statut et total.
 - **Tri** par date (plus récente / plus ancienne), par secteur, par entreprise et par temps de trajet depuis le domicile (le plus court d'abord).
 - **Filtres** par statut, secteur et entreprise, plus une recherche texte. Le temps de trajet sert uniquement au tri, pas au filtrage.
-- **Ajout local** d'une candidature via un petit formulaire, suppression, et bouton « Réinitialiser les modifications locales ».
+- **Lecture seule** : seules les candidatures du fichier chiffré sont affichées (pas d'ajout ni de suppression depuis le site).
+- **Bandeau d'alerte** rouge : échéances (`date_limite`) dans les 7 prochains jours ou dépassées pour une candidature encore en cours d'examen, et relances dues. Badge « ⏰ Échéance J-n » sur les cartes.
+- **Récap de la semaine** (repliable) : candidatures envoyées et changements de statut des 7 derniers jours (aujourd'hui inclus, d'après `historique`), relances en retard ou prévues dans les 7 prochains jours.
+- **Chances de réponse (estimation)** : score indicatif de 5 à 100 pour les candidatures en cours d'examen, affiché sur chaque carte, dans un classement et comme option de tri. Ce n'est **pas une probabilité réelle**. Règles : « Validée » = réponse positive (en tête, sans score) ; « Refusée » = 0, exclue ; « En cours d'examen » : base 50, −2 points par jour au-delà de 7 jours depuis la candidature, +10 si recruteur connu, +10 si la source est une agence d'emploi ou d'intérim, −10 si candidature spontanée, +5 si une relance est prévue, résultat borné entre 5 et 100. Le secteur n'est pas utilisé. La formule est dans la fonction `chancesReponse` de `index.html`.
+- **Détails** dépliables par carte, badge « À relancer » et compteur associé, marqueur « à vérifier » pour les entrées signalées `ambigu`.
 - Affichage adapté au mobile.
 
 ## Données
 
-Les données affichées proviennent de `data.enc.json` (chiffré). Le fichier `data-exemple.json` contient des données d'exemple fictives (en clair) au format attendu. Les candidatures ajoutées sont enregistrées **uniquement dans le navigateur** (`localStorage`) : rien n'est envoyé à un serveur. Les données déchiffrées ne sont jamais enregistrées dans le navigateur.
+Les données affichées proviennent de `data.enc.json` (chiffré). Le fichier `data-exemple.json` contient des données d'exemple fictives (en clair) au format attendu. Le site est en lecture seule et n'utilise pas le stockage local du navigateur : les données déchiffrées restent uniquement en mémoire le temps de la session et rien n'est envoyé à un serveur.
+
+### Structure des données
+
+Le JSON en clair est un tableau d'objets. Les 13 champs affichés :
+
+| Champ | Libellé | Format |
+|---|---|---|
+| `poste` | Poste | texte, obligatoire |
+| `entreprise` | Entreprise | texte, obligatoire |
+| `secteur` | Secteur | texte, obligatoire |
+| `ville` | Ville | texte, vide ou `null` |
+| `date` | Date de candidature | `AAAA-MM-JJ`, obligatoire |
+| `trajet` | Temps de trajet | nombre de minutes ou `null` |
+| `statut` | Statut | « Refusée », « En cours d'examen » ou « Validée », obligatoire |
+| `type_contrat` | Type de contrat | texte ou `null` (CDI, CDD, Intérim, Alternance…) |
+| `mode_travail` | Mode de travail | texte ou `null` (Présentiel, Télétravail, Hybride) |
+| `salaire` | Salaire proposé | texte libre ou `null` |
+| `source` | Source de l'offre | texte ou `null` (Indeed, LinkedIn, Adecco, Candidature spontanée…) |
+| `recruteur` | Recruteur / agence | texte ou `null` |
+| `date_relance` | Date de relance prévue | `AAAA-MM-JJ` ou `null` |
+
+Champs facultatifs supplémentaires : `date_limite` (`AAAA-MM-JJ` ou `null`, échéance de candidature ou de réponse), `historique` (`null` ou tableau de `{ "date": "AAAA-MM-JJ", "statut": … }`), `note` (texte, affiché dans les détails), `ambigu` (`true` = marqueur « à vérifier »), `preuve` et `source_detail` (texte, jamais affichés). Les valeurs absentes s'affichent « Non renseigné ». `setup.html` vérifie cette structure avant de chiffrer et refuse un statut inconnu.
 
 Le lieu de domicile utilisé pour le temps de trajet est défini dans la constante `DOMICILE` en haut du script de `index.html`.
 

@@ -23,7 +23,7 @@
   main { max-width: 1100px; margin: -2.5rem auto 2rem; padding: 0 1rem; }
   .banner { background: #fff7ed; border: 1px dashed #f59e0b; color: #92400e; border-radius: 10px; padding: .6rem .9rem; margin-bottom: 1rem; font-size: .9rem; }
   .banner strong { text-transform: uppercase; letter-spacing: .03em; }
-  .counters { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; margin-bottom: 1rem; }
+  .counters { display: grid; grid-template-columns: repeat(5, 1fr); gap: .75rem; margin-bottom: 1rem; }
   .counter { background: var(--card); border-radius: 12px; padding: .9rem; box-shadow: 0 1px 3px rgba(0,0,0,.08); border-top: 4px solid var(--primary); }
   .counter .num { font-size: 1.7rem; font-weight: 700; }
   .counter .lbl { font-size: .85rem; color: var(--muted); }
@@ -38,9 +38,6 @@
   input:focus, select:focus { outline: 2px solid #c7d2fe; border-color: var(--primary); }
   button { font: inherit; font-size: .9rem; border: none; border-radius: 8px; padding: .55rem .9rem; cursor: pointer; }
   .btn-primary { background: var(--primary); color: #fff; } .btn-primary:hover { background: var(--primary-dark); }
-  .btn-ghost { background: #eef2ff; color: var(--primary-dark); } .btn-ghost:hover { background: #e0e7ff; }
-  .btn-del { background: transparent; color: var(--muted); padding: .2rem .45rem; font-size: .8rem; }
-  .btn-del:hover { color: var(--red); background: var(--red-bg); }
   .toolbar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: space-between; margin: .25rem 0 .75rem; }
   .result-count { font-size: .9rem; color: var(--muted); }
   .list { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: .75rem; }
@@ -57,12 +54,10 @@
   .badge.examen { background: var(--amber-bg); color: var(--amber); }
   .badge.validee { background: var(--green-bg); color: var(--green); }
   .empty { text-align: center; color: var(--muted); padding: 2rem 1rem; background: var(--card); border-radius: 12px; }
-  details summary { cursor: pointer; font-weight: 600; }
-  form.add { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .75rem; margin-top: .9rem; }
-  form.add .actions { display: flex; align-items: flex-end; }
   footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 1rem; }
   @media (max-width: 600px) {
     .counters { grid-template-columns: repeat(2, 1fr); }
+    .counter.relance { grid-column: span 2; }
     header h1 { font-size: 1.35rem; }
   }
   [hidden] { display: none !important; }
@@ -77,6 +72,33 @@
   .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; max-width: 1100px; margin: 0 auto; }
   .btn-logout { background: rgba(255,255,255,.18); color: #fff; white-space: nowrap; }
   .btn-logout:hover { background: rgba(255,255,255,.3); }
+  .counter.relance { border-top-color: #2563eb; } .counter.relance .num { color: #1d4ed8; }
+  .card.a-relancer { box-shadow: 0 0 0 2px #93c5fd, 0 1px 3px rgba(0,0,0,.08); }
+  .badges { display: flex; flex-direction: column; align-items: flex-end; gap: .25rem; }
+  .badge.relance { background: #dbeafe; color: #1d4ed8; }
+  .nr { color: var(--muted); font-style: italic; }
+  .card details { font-size: .85rem; }
+  .card details summary { cursor: pointer; color: var(--primary-dark); font-weight: 600; font-size: .85rem; }
+  .card dl { display: grid; grid-template-columns: max-content 1fr; gap: .2rem .6rem; margin: .5rem 0 0; }
+  .card dt { color: var(--muted); }
+  .card dd { margin: 0; overflow-wrap: anywhere; }
+  .alertes { background: #fef2f2; border: 2px solid var(--red); color: #7f1d1d; border-radius: 12px; padding: .8rem 1rem; margin-bottom: 1rem; }
+  .alertes h2 { margin: 0 0 .4rem; font-size: 1.05rem; color: var(--red); }
+  .alertes h3 { margin: .5rem 0 .2rem; font-size: .92rem; }
+  .alertes ul, .recap ul, .chances ol { margin: .2rem 0 .4rem; padding-left: 1.2rem; font-size: .88rem; }
+  .panel > summary { cursor: pointer; font-weight: 700; font-size: 1.05rem; }
+  .recap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .75rem; margin-top: .6rem; }
+  .recap-grid h3 { margin: 0 0 .2rem; font-size: .92rem; }
+  .recap-grid .big { font-size: 1.4rem; font-weight: 700; color: var(--primary-dark); }
+  .muted { color: var(--muted); font-size: .85rem; }
+  .badge.echeance { background: var(--red); color: #fff; }
+  .badge.score { background: #eef2ff; color: var(--primary-dark); }
+  .badge.positive { background: var(--green-bg); color: var(--green); }
+  .verif { display: inline-block; font-size: .72rem; font-weight: 600; color: var(--amber); background: var(--amber-bg); border-radius: 999px; padding: .05rem .45rem; margin-left: .3rem; vertical-align: middle; }
+  .estimation { font-size: .85rem; color: var(--muted); margin: .4rem 0; }
+  .chances ol li { margin: .15rem 0; }
+  .chances details { margin-top: .5rem; font-size: .85rem; }
+  .chances details summary { cursor: pointer; color: var(--primary-dark); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -106,13 +128,21 @@
 </header>
 
 <main>
-  <div class="banner" role="note"><strong>Accès protégé</strong> — données chiffrées, déchiffrées uniquement dans ce navigateur. Vos ajouts sont enregistrés uniquement dans ce navigateur.</div>
+  <div class="banner" role="note"><strong>Accès protégé</strong> — données chiffrées, déchiffrées uniquement dans ce navigateur. Consultation en lecture seule.</div>
+
+  <section class="alertes" id="alertes" role="alert" hidden></section>
+
+  <details class="panel recap" id="recap-panel" open>
+    <summary>Récap de la semaine</summary>
+    <div id="recap"></div>
+  </details>
 
   <section class="counters" aria-label="Compteurs">
     <div class="counter"><div class="num" id="c-total">0</div><div class="lbl">Total</div></div>
     <div class="counter examen"><div class="num" id="c-examen">0</div><div class="lbl">En cours d'examen</div></div>
     <div class="counter validee"><div class="num" id="c-validee">0</div><div class="lbl">Validées</div></div>
     <div class="counter refusee"><div class="num" id="c-refusee">0</div><div class="lbl">Refusées</div></div>
+    <div class="counter relance"><div class="num" id="c-relance">0</div><div class="lbl">À relancer</div></div>
   </section>
 
   <section class="panel" aria-label="Tri et filtres">
@@ -128,6 +158,8 @@
           <option value="secteur">Secteur (A → Z)</option>
           <option value="entreprise">Entreprise (A → Z)</option>
           <option value="trajet">Temps de trajet (plus court)</option>
+          <option value="relance">Date de relance (plus proche)</option>
+          <option value="chances">Chances de réponse</option>
         </select>
       </label>
       <label>Statut
@@ -139,32 +171,26 @@
       <label>Entreprise
         <select id="f-entreprise"><option value="">Toutes</option></select>
       </label>
+      <label>Type de contrat
+        <select id="f-contrat"><option value="">Tous</option></select>
+      </label>
+      <label>Source
+        <select id="f-source"><option value="">Toutes</option></select>
+      </label>
     </div>
   </section>
 
   <div class="toolbar">
     <span class="result-count" id="result-count"></span>
-    <button type="button" class="btn-ghost" id="reset">Réinitialiser les modifications locales</button>
   </div>
 
   <section class="list" id="list" aria-live="polite"></section>
 
-  <section class="panel" style="margin-top:1rem">
-    <details>
-      <summary>➕ Ajouter une candidature</summary>
-      <form class="add" id="add-form" autocomplete="off">
-        <label>Poste<input name="poste" required></label>
-        <label>Entreprise<input name="entreprise" required></label>
-        <label>Secteur<input name="secteur" list="secteurs-list" required></label>
-        <label>Ville<input name="ville" required></label>
-        <label>Date de candidature<input type="date" name="date" required></label>
-        <label>Temps de trajet (min)<input type="number" name="trajet" min="0" max="600" required></label>
-        <label>Statut<select name="statut" id="add-statut"></select></label>
-        <div class="actions"><button type="submit" class="btn-primary">Ajouter</button></div>
-        <datalist id="secteurs-list"></datalist>
-      </form>
-    </details>
-  </section>
+  <details class="panel chances" id="chances-panel" style="margin-top:1rem">
+    <summary>Chances de réponse (estimation)</summary>
+    <div id="chances"></div>
+  </details>
+
 </main>
 
 <footer>Données chiffrées (AES-256-GCM, clé dérivée par Argon2id) — aucune donnée n'est envoyée à un serveur.</footer>
@@ -237,13 +263,44 @@
   }
 
   // Vérifie qu'un texte JSON a la structure attendue par le tableau de bord.
-  const CHAMPS = ["poste", "entreprise", "secteur", "ville", "date", "trajet", "statut"];
+  // Obligatoires : poste, entreprise, secteur, date, statut.
+  // Facultatifs (texte ou null) : ville (vide autorisé), trajet (nombre ou null), type_contrat, mode_travail, salaire,
+  // source, recruteur, date_relance et date_limite (AAAA-MM-JJ ou null), note,
+  // preuve et source_detail (jamais affichés), ambigu (booléen ou null),
+  // historique (null ou tableau de { date: "AAAA-MM-JJ", statut }).
+  const CHAMPS = ["poste", "entreprise", "secteur", "date", "statut"];
+  const FACULTATIFS = ["ville", "type_contrat", "mode_travail", "salaire", "source", "recruteur", "date_relance", "date_limite", "note", "preuve", "source_detail"];
+  const STATUTS_VALIDES = ["Refusée", "En cours d'examen", "Validée"];
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
   function validerDonnees(data) {
     if (!Array.isArray(data)) throw new Error("Le JSON doit être un tableau de candidatures.");
     data.forEach((c, i) => {
-      if (!c || typeof c !== "object") throw new Error(`Entrée ${i + 1} : objet attendu.`);
-      for (const k of CHAMPS) if (!(k in c)) throw new Error(`Entrée ${i + 1} : champ « ${k} » manquant.`);
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(c.date))) throw new Error(`Entrée ${i + 1} : date au format AAAA-MM-JJ attendue.`);
+      const n = `Entrée ${i + 1}`;
+      if (!c || typeof c !== "object" || Array.isArray(c)) throw new Error(`${n} : objet attendu.`);
+      for (const k of CHAMPS) {
+        if (typeof c[k] !== "string" || !c[k].trim()) throw new Error(`${n} : champ « ${k} » manquant ou vide.`);
+      }
+      if (!DATE_RE.test(c.date)) throw new Error(`${n} : date au format AAAA-MM-JJ attendue.`);
+      if (!STATUTS_VALIDES.includes(c.statut)) throw new Error(`${n} : statut « ${c.statut} » inconnu (attendu : ${STATUTS_VALIDES.join(", ")}).`);
+      if (c.trajet != null && !(typeof c.trajet === "number" && Number.isFinite(c.trajet) && c.trajet >= 0)) {
+        throw new Error(`${n} : « trajet » doit être un nombre de minutes ou null.`);
+      }
+      for (const k of FACULTATIFS) {
+        if (c[k] != null && typeof c[k] !== "string") throw new Error(`${n} : « ${k} » doit être un texte ou null.`);
+      }
+      for (const k of ["date_relance", "date_limite"]) {
+        if (c[k] != null && c[k] !== "" && !DATE_RE.test(c[k])) throw new Error(`${n} : « ${k} » au format AAAA-MM-JJ ou null attendu.`);
+      }
+      if (c.ambigu != null && typeof c.ambigu !== "boolean") throw new Error(`${n} : « ambigu » doit être true, false ou null.`);
+      if (c.historique != null) {
+        if (!Array.isArray(c.historique)) throw new Error(`${n} : « historique » doit être un tableau ou null.`);
+        c.historique.forEach((h, j) => {
+          if (!h || typeof h !== "object" || typeof h.date !== "string" || !DATE_RE.test(h.date)) {
+            throw new Error(`${n} : historique[${j}] : date au format AAAA-MM-JJ attendue.`);
+          }
+          if (!STATUTS_VALIDES.includes(h.statut)) throw new Error(`${n} : historique[${j}] : statut « ${h.statut} » inconnu.`);
+        });
+      }
     });
     return data;
   }
@@ -251,9 +308,8 @@
 
   // ===== Configuration =====
   const DOMICILE = "Clichy"; // Lieu de domicile (à corriger si besoin)
-  // Seuls les ajouts locaux (et les indices des entrées masquées) sont stockés ici,
-  // jamais les données déchiffrées.
-  const STORAGE_KEY = "suivi-candidatures-v2";
+  // Site en lecture seule : aucun stockage local. Nettoyage des anciennes clés.
+  try { ["suivi-candidatures-v1", "suivi-candidatures-v2"].forEach(k => localStorage.removeItem(k)); } catch (e) { /* ignoré */ }
   const FICHIER_CHIFFRE = "data.enc.json";
 
   const STATUTS = {
@@ -263,30 +319,7 @@
   };
 
   // ===== État (en mémoire uniquement) =====
-  let base = [];          // entrées déchiffrées depuis data.enc.json
-  let idFichier = "";     // sel du fichier, sert à rattacher les suppressions locales
-  let local = { ajouts: [], masques: {} };
-  let candidatures = [];  // vue combinée affichée
-
-  function chargerLocal() {
-    try {
-      const d = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-      if (d && Array.isArray(d.ajouts) && d.masques && typeof d.masques === "object") return d;
-    } catch (e) { /* stockage indisponible */ }
-    return { ajouts: [], masques: {} };
-  }
-
-  function sauvegarder() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(local)); } catch (e) { /* ignoré */ }
-  }
-
-  function recomposer() {
-    const masques = new Set(local.masques[idFichier] || []);
-    candidatures = [
-      ...base.map((c, i) => ({ ...c, _src: "base", _i: i })).filter(c => !masques.has(c._i)),
-      ...local.ajouts.map((c, i) => ({ ...c, _src: "local", _i: i }))
-    ];
-  }
+  let candidatures = [];  // entrées déchiffrées depuis data.enc.json (en mémoire uniquement)
 
   // ===== Utilitaires =====
   const $ = id => document.getElementById(id);
@@ -303,23 +336,85 @@
     return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
   }
 
-  function remplirSelect(select, valeurs, libelleTous) {
+  const NR = "Non renseigné";
+  const NR_VAL = "__non_renseigne__"; // valeur de filtre pour les champs vides
+  const vide = v => v == null || String(v).trim() === "";
+  const afficherVal = v => vide(v) ? `<span class="nr">${NR}</span>` : echapper(v);
+  const afficherDate = v => vide(v) ? `<span class="nr">${NR}</span>` : echapper(formaterDate(v));
+  const afficherTrajet = v => vide(v) ? `<span class="nr">${NR}</span>` : `${echapper(v)} min`;
+  const correspond = (val, filtre) => !filtre || (filtre === NR_VAL ? vide(val) : val === filtre);
+
+  function aujourdhui() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+  const aRelancer = c => !vide(c.date_relance) && c.date_relance <= aujourdhui();
+
+  // Nombre de jours de a vers b (dates AAAA-MM-JJ), sans effet de fuseau horaire.
+  const jourUTC = iso => { const [y, m, d] = iso.split("-").map(Number); return Date.UTC(y, m - 1, d); };
+  const ecartJours = (a, b) => Math.round((jourUTC(b) - jourUTC(a)) / 86400000);
+  const libelle = c => `${echapper(c.poste)} — ${echapper(c.entreprise)}`;
+  const enJours = n => n === 0 ? "aujourd'hui" : n > 0 ? `dans ${n} j` : `en retard de ${-n} j`;
+
+  // Échéance (date_limite) : dans les 7 prochains jours, ou dépassée et toujours en cours d'examen.
+  function echeance(c) {
+    if (vide(c.date_limite)) return null;
+    const n = ecartJours(aujourdhui(), c.date_limite);
+    if (n >= 0 && n <= 7) return { n, texte: `⏰ Échéance J-${n}` };
+    if (n < 0 && c.statut === "En cours d'examen") return { n, texte: "⏰ Échéance dépassée" };
+    return null;
+  }
+
+  // ===== Chances de réponse : ESTIMATION heuristique, pas une probabilité réelle =====
+  // Agences d'emploi / intérim reconnues dans le champ « source » (bonus +10).
+  const AGENCES = /int[ée]rim|agence|adecco|manpower|randstad|iziwork|synergie|crit\b|proman|start people|samsic|partnaire|supplay|gojob|staffmatch|temporis|actual|expectra|domino|cabinet|recrutement/;
+  // Règles (une seule fonction, documentée et affichée dans « Comment c'est calculé ? ») :
+  //  - Validée  -> « Réponse positive » (en tête, sans score)
+  //  - Refusée  -> 0, exclue du classement
+  //  - En cours -> 50
+  //       - 2 points par jour au-delà de 7 jours depuis la candidature
+  //       + 10 si un recruteur / une agence est renseigné(e)
+  //       + 10 si la source est une agence d'emploi / d'intérim, - 10 si candidature spontanée
+  //       + 5 si une date de relance est prévue
+  //     résultat borné entre 5 et 100.
+  // Le secteur n'est pas utilisé : aucune règle simple et vérifiable ne le justifie.
+  function chancesReponse(c, today = aujourdhui()) {
+    if (c.statut === "Validée") return { type: "positive", score: null, raisons: ["Statut « Validée »"] };
+    if (c.statut === "Refusée") return { type: "refusee", score: 0, raisons: ["Statut « Refusée »"] };
+    let score = 50;
+    const raisons = ["Base 50"];
+    const jours = Math.max(0, ecartJours(c.date, today));
+    if (jours > 7) { score -= 2 * (jours - 7); raisons.push(`−${2 * (jours - 7)} (candidature il y a ${jours} j)`); }
+    if (!vide(c.recruteur)) { score += 10; raisons.push("+10 recruteur connu"); }
+    const src = normaliser(c.source || "");
+    if (/spontan/.test(src)) { score -= 10; raisons.push("−10 candidature spontanée"); }
+    else if (AGENCES.test(src)) { score += 10; raisons.push("+10 agence / intérim"); }
+    if (!vide(c.date_relance)) { score += 5; raisons.push("+5 relance prévue"); }
+    score = Math.min(100, Math.max(5, score));
+    return { type: "score", score, raisons };
+  }
+  const rangChances = c => { const r = chancesReponse(c); return r.type === "positive" ? 1000 : r.type === "refusee" ? -1 : r.score; };
+
+  function remplirSelect(select, valeurs, libelleTous, avecNr = false) {
     const actuelle = select.value;
     select.innerHTML = `<option value="">${libelleTous}</option>` +
-      valeurs.map(v => `<option value="${echapper(v)}">${echapper(v)}</option>`).join("");
-    if (valeurs.includes(actuelle)) select.value = actuelle;
+      valeurs.map(v => `<option value="${echapper(v)}">${echapper(v)}</option>`).join("") +
+      (avecNr ? `<option value="${NR_VAL}">${NR}</option>` : "");
+    if (valeurs.includes(actuelle) || (avecNr && actuelle === NR_VAL)) select.value = actuelle;
   }
 
   function uniques(cle) {
-    return [...new Set(candidatures.map(c => c[cle]))].sort(collator.compare);
+    return [...new Set(candidatures.map(c => c[cle]).filter(v => !vide(v)))].sort(collator.compare);
   }
+  const aDesVides = cle => candidatures.some(c => vide(c[cle]));
 
   // ===== Rendu =====
   function majFiltres() {
     remplirSelect($("f-statut"), Object.keys(STATUTS), "Tous");
     remplirSelect($("f-secteur"), uniques("secteur"), "Tous");
     remplirSelect($("f-entreprise"), uniques("entreprise"), "Toutes");
-    $("secteurs-list").innerHTML = uniques("secteur").map(s => `<option value="${echapper(s)}">`).join("");
+    remplirSelect($("f-contrat"), uniques("type_contrat"), "Tous", aDesVides("type_contrat"));
+    remplirSelect($("f-source"), uniques("source"), "Toutes", aDesVides("source"));
   }
 
   function majCompteurs() {
@@ -327,6 +422,7 @@
     $("c-refusee").textContent = candidatures.filter(c => c.statut === "Refusée").length;
     $("c-examen").textContent = candidatures.filter(c => c.statut === "En cours d'examen").length;
     $("c-validee").textContent = candidatures.filter(c => c.statut === "Validée").length;
+    $("c-relance").textContent = candidatures.filter(aRelancer).length;
   }
 
   function trier(liste, mode) {
@@ -335,7 +431,10 @@
       case "date-asc": l.sort((a, b) => a.date.localeCompare(b.date)); break;
       case "secteur": l.sort((a, b) => collator.compare(a.secteur, b.secteur) || b.date.localeCompare(a.date)); break;
       case "entreprise": l.sort((a, b) => collator.compare(a.entreprise, b.entreprise) || b.date.localeCompare(a.date)); break;
-      case "trajet": l.sort((a, b) => (Number(a.trajet) - Number(b.trajet)) || b.date.localeCompare(a.date)); break;
+      case "trajet": l.sort((a, b) => (vide(a.trajet) - vide(b.trajet)) || (vide(a.trajet) ? 0 : Number(a.trajet) - Number(b.trajet)) || b.date.localeCompare(a.date)); break;
+      case "chances": l.sort((a, b) => (rangChances(b) - rangChances(a)) || b.date.localeCompare(a.date)); break;
+      case "relance": l.sort((a, b) => (vide(a.date_relance) - vide(b.date_relance)) ||
+        (vide(a.date_relance) ? 0 : a.date_relance.localeCompare(b.date_relance)) || b.date.localeCompare(a.date)); break;
       default: l.sort((a, b) => b.date.localeCompare(a.date));
     }
     return l;
@@ -346,14 +445,18 @@
     const fStatut = $("f-statut").value;
     const fSecteur = $("f-secteur").value;
     const fEntreprise = $("f-entreprise").value;
+    const fContrat = $("f-contrat").value;
+    const fSource = $("f-source").value;
 
     // Le temps de trajet sert uniquement au tri, jamais au filtrage.
     const filtrees = candidatures
-      .map((c, index) => ({ ...c, index }))
       .filter(c => !fStatut || c.statut === fStatut)
       .filter(c => !fSecteur || c.secteur === fSecteur)
       .filter(c => !fEntreprise || c.entreprise === fEntreprise)
-      .filter(c => !q || normaliser([c.poste, c.entreprise, c.secteur, c.ville, c.statut].join(" ")).includes(q));
+      .filter(c => correspond(c.type_contrat, fContrat))
+      .filter(c => correspond(c.source, fSource))
+      .filter(c => !q || normaliser([c.poste, c.entreprise, c.secteur, c.ville, c.statut,
+        c.type_contrat, c.mode_travail, c.salaire, c.source, c.recruteur, c.note].filter(v => !vide(v)).join(" ")).includes(q));
 
     const liste = trier(filtrees, $("sort").value);
     $("result-count").textContent = `${liste.length} candidature${liste.length > 1 ? "s" : ""} affichée${liste.length > 1 ? "s" : ""} sur ${candidatures.length}`;
@@ -365,29 +468,135 @@
 
     $("list").innerHTML = liste.map(c => {
       const cls = STATUTS[c.statut] || "";
-      return `<article class="card ${cls}">
+      const relance = aRelancer(c);
+      const ech = echeance(c);
+      const ch = chancesReponse(c);
+      const badgeChances = ch.type === "positive" ? `<span class="badge positive">Réponse positive</span>`
+        : ch.type === "score" ? `<span class="badge score" title="Estimation, pas une probabilité réelle">Chances ≈ ${ch.score}/100</span>` : "";
+      // Le champ « preuve » n'est jamais affiché.
+      const details = [
+        ["Poste", afficherVal(c.poste)],
+        ["Entreprise", afficherVal(c.entreprise)],
+        ["Secteur", afficherVal(c.secteur)],
+        ["Ville", afficherVal(c.ville)],
+        ["Date de candidature", afficherDate(c.date)],
+        ["Temps de trajet", afficherTrajet(c.trajet)],
+        ["Statut", afficherVal(c.statut)],
+        ["Type de contrat", afficherVal(c.type_contrat)],
+        ["Mode de travail", afficherVal(c.mode_travail)],
+        ["Salaire proposé", afficherVal(c.salaire)],
+        ["Source de l'offre", afficherVal(c.source)],
+        ["Recruteur / agence", afficherVal(c.recruteur)],
+        ["Date de relance prévue", afficherDate(c.date_relance)],
+        ["Date limite", afficherDate(c.date_limite)],
+        ...(Array.isArray(c.historique) && c.historique.length
+          ? [["Historique du statut", c.historique.slice().sort((a, b) => a.date.localeCompare(b.date))
+              .map(h => `${echapper(formaterDate(h.date))} : ${echapper(h.statut)}`).join("<br>")]] : []),
+        ...(!vide(c.note) ? [["Note", echapper(c.note)]] : [])
+      ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+      return `<article class="card ${cls}${relance ? " a-relancer" : ""}${ech ? " echeance" : ""}">
         <div class="card-head">
           <div>
-            <h3>${echapper(c.poste)}</h3>
+            <h3>${echapper(c.poste)}${c.ambigu === true ? `<span class="verif" title="Information à vérifier">à vérifier</span>` : ""}</h3>
             <div class="company">${echapper(c.entreprise)}</div>
           </div>
-          <span class="badge ${cls}">${echapper(c.statut)}</span>
+          <div class="badges">
+            <span class="badge ${cls}">${echapper(c.statut)}</span>
+            ${relance ? `<span class="badge relance">À relancer</span>` : ""}
+            ${ech ? `<span class="badge echeance">${ech.texte}</span>` : ""}
+            ${badgeChances}
+          </div>
         </div>
         <div class="meta">
           <span class="chip">🏷️ ${echapper(c.secteur)}</span>
-          <span class="chip">📍 ${echapper(c.ville)}</span>
-          <span class="chip" title="Depuis ${echapper(DOMICILE)}">🚌 ${echapper(c.trajet)} min</span>
+          <span class="chip">📍 ${afficherVal(c.ville)}</span>
+          <span class="chip" title="Depuis ${echapper(DOMICILE)}">🚌 ${afficherTrajet(c.trajet)}</span>
+          <span class="chip" title="Type de contrat">📄 ${afficherVal(c.type_contrat)}</span>
+          <span class="chip" title="Mode de travail">🏢 ${afficherVal(c.mode_travail)}</span>
         </div>
         <div class="card-foot">
           <small class="company">Candidature du ${echapper(formaterDate(c.date))}</small>
-          <button type="button" class="btn-del" data-index="${c.index}" aria-label="Supprimer">Supprimer</button>
         </div>
+        <details>
+          <summary>Détails</summary>
+          <dl>${details}</dl>
+        </details>
       </article>`;
     }).join("");
   }
 
+  const liste = (items, rendu, siVide) => items.length
+    ? `<ul>${items.map(c => `<li>${rendu(c)}</li>`).join("")}</ul>` : `<p class="muted">${siVide}</p>`;
+
+  // Bandeau rouge : échéances proches ou dépassées, et relances dues.
+  function majAlertes() {
+    const today = aujourdhui();
+    const ech = candidatures.map(c => ({ c, e: echeance(c) })).filter(x => x.e).sort((a, b) => a.e.n - b.e.n);
+    const rel = candidatures.filter(aRelancer).sort((a, b) => a.date_relance.localeCompare(b.date_relance));
+    const box = $("alertes");
+    if (!ech.length && !rel.length) { box.hidden = true; box.innerHTML = ""; return; }
+    box.hidden = false;
+    box.innerHTML = `<h2>⚠️ À traiter rapidement</h2>` +
+      (ech.length ? `<h3>Échéances (date limite dans les 7 jours ou dépassée)</h3><ul>${ech.map(({ c, e }) =>
+        `<li><strong>${e.texte}</strong> — ${libelle(c)} (${echapper(formaterDate(c.date_limite))}${e.n < 0 ? `, dépassée de ${-e.n} j` : ""})</li>`).join("")}</ul>` : "") +
+      (rel.length ? `<h3>Relances dues</h3><ul>${rel.map(c =>
+        `<li>${libelle(c)} — relance prévue le ${echapper(formaterDate(c.date_relance))} (${enJours(ecartJours(today, c.date_relance))})</li>`).join("")}</ul>` : "");
+  }
+
+  // Récap des 7 derniers jours (aujourd'hui inclus) et relances des 7 prochains jours.
+  function majRecap() {
+    const today = aujourdhui();
+    const dansSemaine = d => { const n = ecartJours(d, today); return n >= 0 && n <= 6; };
+    const ajoutees = candidatures.filter(c => dansSemaine(c.date)).sort((a, b) => b.date.localeCompare(a.date));
+    const avecHisto = candidatures.filter(c => Array.isArray(c.historique) && c.historique.length);
+    const changements = [];
+    avecHisto.forEach(c => c.historique.filter(h => dansSemaine(h.date)).forEach(h => changements.push({ c, h })));
+    changements.sort((a, b) => b.h.date.localeCompare(a.h.date));
+    const relances = candidatures.filter(c => !vide(c.date_relance) && ecartJours(today, c.date_relance) <= 7)
+      .sort((a, b) => a.date_relance.localeCompare(b.date_relance));
+    const bloc = (titre, n, contenu) => `<div><h3>${titre}</h3><div class="big">${n}</div>${contenu}</div>`;
+    $("recap").innerHTML = `<p class="muted">Du ${echapper(formaterDate(new Date(jourUTC(today) - 6 * 86400000).toISOString().slice(0, 10)))} au ${echapper(formaterDate(today))}.</p>
+      <div class="recap-grid">
+        ${bloc("Candidatures envoyées", ajoutees.length,
+          liste(ajoutees, c => `${libelle(c)} <span class="muted">(${echapper(formaterDate(c.date))})</span>`, "Aucune candidature cette semaine."))}
+        ${bloc("Changements de statut", avecHisto.length ? changements.length : "—",
+          !avecHisto.length ? `<p class="muted">Aucun historique de statut</p>`
+            : changements.length ? `<ul>${changements.map(({ c, h }) => `<li>${libelle(c)} : ${echapper(h.statut)} <span class="muted">(${echapper(formaterDate(h.date))})</span></li>`).join("")}</ul>`
+            : `<p class="muted">Aucun changement de statut cette semaine.</p>`)}
+        ${bloc("Relances (en retard ou dans les 7 jours)", relances.length,
+          liste(relances, c => `${libelle(c)} <span class="muted">(${enJours(ecartJours(today, c.date_relance))})</span>`, "Aucune relance prévue."))}
+      </div>`;
+  }
+
+  // Classement « Chances de réponse » (estimation).
+  function majChances() {
+    const positives = candidatures.filter(c => c.statut === "Validée");
+    const enCours = candidatures.filter(c => c.statut === "En cours d'examen")
+      .map(c => ({ c, r: chancesReponse(c) })).sort((a, b) => (b.r.score - a.r.score) || b.c.date.localeCompare(a.c.date));
+    const refusees = candidatures.filter(c => c.statut === "Refusée").length;
+    $("chances").innerHTML = `<p class="estimation">⚠️ <strong>Estimation indicative</strong>, calculée à partir de règles simples : ce n'est pas une probabilité réelle de réponse.</p>
+      ${positives.length ? `<h3>Réponse positive (${positives.length})</h3><ul>${positives.map(c => `<li>${libelle(c)}</li>`).join("")}</ul>` : ""}
+      <h3>En cours d'examen (${enCours.length})</h3>
+      ${enCours.length ? `<ol>${enCours.map(({ c, r }) => `<li><strong>${r.score}/100</strong> — ${libelle(c)} <span class="muted">(${echapper(r.raisons.join(", "))})</span></li>`).join("")}</ol>` : `<p class="muted">Aucune candidature en cours.</p>`}
+      <p class="muted">${refusees} candidature${refusees > 1 ? "s" : ""} refusée${refusees > 1 ? "s" : ""} exclue${refusees > 1 ? "s" : ""} du classement (score 0).</p>
+      <details>
+        <summary>Comment c'est calculé ?</summary>
+        <ul>
+          <li>« Validée » : affichée comme <em>Réponse positive</em>, sans score. « Refusée » : 0, exclue du classement.</li>
+          <li>« En cours d'examen » : on part de <strong>50</strong>.</li>
+          <li>−2 points par jour écoulé au-delà de 7 jours depuis la candidature.</li>
+          <li>+10 si un recruteur ou une agence est renseigné(e).</li>
+          <li>+10 si la source est une agence d'emploi ou d'intérim (Adecco, Manpower, Randstad, iziwork…), −10 si c'est une candidature spontanée.</li>
+          <li>+5 si une date de relance est prévue.</li>
+          <li>Le résultat est borné entre 5 et 100. Le secteur n'est pas pris en compte.</li>
+        </ul>
+      </details>`;
+  }
+
   function toutRafraichir() {
-    recomposer();
+    majAlertes();
+    majRecap();
+    majChances();
     majFiltres();
     majCompteurs();
     afficher();
@@ -416,8 +625,7 @@
     }
     try {
       const texte = await dechiffrer(champId.value, champMdp.value, fichier);
-      base = validerDonnees(JSON.parse(texte));
-      idFichier = fichier.salt;
+      candidatures = validerDonnees(JSON.parse(texte));
     } catch (err) {
       $("login-btn").disabled = false;
       champMdp.value = "";
@@ -427,20 +635,20 @@
     champMdp.value = "";
     $("login-btn").disabled = false;
     msg("");
-    local = chargerLocal();
     $("vue-login").hidden = true;
     $("vue-app").hidden = false;
     toutRafraichir();
   });
 
   $("logout").addEventListener("click", () => {
-    base = []; candidatures = []; idFichier = ""; local = { ajouts: [], masques: {} };
+    candidatures = [];
     $("list").innerHTML = "";
+    $("recap").innerHTML = ""; $("chances").innerHTML = "";
+    $("alertes").innerHTML = ""; $("alertes").hidden = true;
     $("f-search").value = "";
-    ["f-statut", "f-secteur", "f-entreprise"].forEach(id => { $(id).innerHTML = ""; });
-    $("secteurs-list").innerHTML = "";
+    ["f-statut", "f-secteur", "f-entreprise", "f-contrat", "f-source"].forEach(id => { $(id).innerHTML = ""; });
     $("result-count").textContent = "";
-    ["c-total", "c-refusee", "c-examen", "c-validee"].forEach(id => { $(id).textContent = "0"; });
+    ["c-total", "c-refusee", "c-examen", "c-validee", "c-relance"].forEach(id => { $(id).textContent = "0"; });
     $("vue-app").hidden = true;
     $("vue-login").hidden = false;
     $("login-form").reset();
@@ -450,57 +658,12 @@
 
   // ===== Événements du tableau de bord =====
   $("domicile-label").textContent = DOMICILE;
-  $("add-statut").innerHTML = Object.keys(STATUTS).map(s => `<option value="${echapper(s)}">${echapper(s)}</option>`).join("");
-  $("add-statut").value = "En cours d'examen";
 
-  ["f-search", "sort", "f-statut", "f-secteur", "f-entreprise"].forEach(id => {
+  ["f-search", "sort", "f-statut", "f-secteur", "f-entreprise", "f-contrat", "f-source"].forEach(id => {
     $(id).addEventListener("input", afficher);
     $(id).addEventListener("change", afficher);
   });
 
-  $("list").addEventListener("click", e => {
-    const btn = e.target.closest(".btn-del");
-    if (!btn) return;
-    const c = candidatures[Number(btn.dataset.index)];
-    if (!c) return;
-    if (confirm(`Supprimer « ${c.poste} — ${c.entreprise} » ?`)) {
-      if (c._src === "local") {
-        local.ajouts.splice(c._i, 1);
-      } else {
-        // On ne stocke que l'indice (aucun contenu) de l'entrée chiffrée masquée.
-        const m = new Set(local.masques[idFichier] || []);
-        m.add(c._i);
-        local.masques = { [idFichier]: [...m].sort((a, b) => a - b) };
-      }
-      sauvegarder();
-      toutRafraichir();
-    }
-  });
-
-  $("add-form").addEventListener("submit", e => {
-    e.preventDefault();
-    const f = new FormData(e.target);
-    local.ajouts.push({
-      poste: f.get("poste").trim(),
-      entreprise: f.get("entreprise").trim(),
-      secteur: f.get("secteur").trim(),
-      ville: f.get("ville").trim(),
-      date: f.get("date"),
-      trajet: Math.max(0, Number(f.get("trajet")) || 0),
-      statut: f.get("statut")
-    });
-    sauvegarder();
-    e.target.reset();
-    $("add-statut").value = "En cours d'examen";
-    toutRafraichir();
-  });
-
-  $("reset").addEventListener("click", () => {
-    if (!confirm("Supprimer les ajouts locaux et réafficher toutes les candidatures chiffrées ?")) return;
-    local = { ajouts: [], masques: {} };
-    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignoré */ }
-    toutRafraichir();
-  });
 })();
 </script>
 </body>
