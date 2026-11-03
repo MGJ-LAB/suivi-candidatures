@@ -1,0 +1,10 @@
+{
+  "v": 2,
+  "kdf": "argon2id",
+  "m": 65536,
+  "t": 3,
+  "p": 1,
+  "salt": "jWGC19jST2/iQIrEo2HH2w==",
+  "iv": "x6gm2j55BfMgZAa2",
+  "ct": "zJR9D4NtecAv2cYhhavjPvvO"
+}
