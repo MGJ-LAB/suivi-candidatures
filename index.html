@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+<link rel="icon" href="data:,">
 <title>Suivi de candidatures</title>
 <style>
   :root {
@@ -61,16 +65,48 @@
     .counters { grid-template-columns: repeat(2, 1fr); }
     header h1 { font-size: 1.35rem; }
   }
+  [hidden] { display: none !important; }
+  .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+  .login { background: var(--card); border-radius: 14px; padding: 1.5rem; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,.2); display: flex; flex-direction: column; gap: .9rem; }
+  .login h1 { margin: 0; font-size: 1.3rem; }
+  .login .btn-primary { padding: .7rem; font-size: 1rem; }
+  .login .btn-primary:disabled { opacity: .7; cursor: wait; }
+  .login-msg { min-height: 1.2em; margin: 0; font-size: .9rem; }
+  .login-msg.erreur { color: var(--red); }
+  .login-msg.info { color: var(--muted); }
+  .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; max-width: 1100px; margin: 0 auto; }
+  .btn-logout { background: rgba(255,255,255,.18); color: #fff; white-space: nowrap; }
+  .btn-logout:hover { background: rgba(255,255,255,.3); }
 </style>
 </head>
 <body>
+<div class="login-wrap" id="vue-login">
+  <form class="login" id="login-form" autocomplete="on" novalidate>
+    <h1>Connexion — Suivi de candidatures</h1>
+    <label for="username">Identifiant
+      <input type="text" id="username" name="username" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+    </label>
+    <label for="password">Mot de passe
+      <input type="password" id="password" name="password" autocomplete="current-password" required>
+    </label>
+    <button type="submit" class="btn-primary" id="login-btn">Se connecter</button>
+    <p class="login-msg" id="login-msg" role="status" aria-live="polite"></p>
+  </form>
+</div>
+
+<div id="vue-app" hidden>
 <header>
-  <h1>Suivi de candidatures</h1>
-  <p>Temps de trajet calculé depuis le domicile : <strong id="domicile-label"></strong></p>
+  <div class="header-row">
+    <div>
+      <h1>Suivi de candidatures</h1>
+      <p>Temps de trajet calculé depuis le domicile : <strong id="domicile-label"></strong></p>
+    </div>
+    <button type="button" class="btn-logout" id="logout">Se déconnecter</button>
+  </div>
 </header>
 
 <main>
-  <div class="banner" role="note"><strong>Données d'exemple</strong> — les entreprises et offres affichées sont fictives. Vos ajouts sont enregistrés uniquement dans ce navigateur.</div>
+  <div class="banner" role="note"><strong>Accès protégé</strong> — données chiffrées, déchiffrées uniquement dans ce navigateur. Vos ajouts sont enregistrés uniquement dans ce navigateur.</div>
 
   <section class="counters" aria-label="Compteurs">
     <div class="counter"><div class="num" id="c-total">0</div><div class="lbl">Total</div></div>
@@ -83,7 +119,7 @@
     <h2>Trier et filtrer</h2>
     <div class="controls">
       <label>Recherche
-        <input type="search" id="f-search" placeholder="Poste, entreprise, ville…">
+        <input type="search" id="f-search" placeholder="Poste, entreprise, ville…" autocomplete="off">
       </label>
       <label>Trier par
         <select id="sort">
@@ -108,7 +144,7 @@
 
   <div class="toolbar">
     <span class="result-count" id="result-count"></span>
-    <button type="button" class="btn-ghost" id="reset">Réinitialiser les exemples</button>
+    <button type="button" class="btn-ghost" id="reset">Réinitialiser les modifications locales</button>
   </div>
 
   <section class="list" id="list" aria-live="polite"></section>
@@ -116,7 +152,7 @@
   <section class="panel" style="margin-top:1rem">
     <details>
       <summary>➕ Ajouter une candidature</summary>
-      <form class="add" id="add-form">
+      <form class="add" id="add-form" autocomplete="off">
         <label>Poste<input name="poste" required></label>
         <label>Entreprise<input name="entreprise" required></label>
         <label>Secteur<input name="secteur" list="secteurs-list" required></label>
@@ -131,12 +167,94 @@
   </section>
 </main>
 
-<footer>Maquette — aucune donnée n'est envoyée à un serveur.</footer>
+<footer>Données chiffrées (AES-256-GCM, clé dérivée par Argon2id) — aucune donnée n'est envoyée à un serveur.</footer>
+</div>
 
 <script>
+/* hash-wasm 4.12.0 — argon2.umd.min.js (MIT, https://github.com/Daninet/hash-wasm), intégré tel quel */
+/*!
+ * hash-wasm (https://www.npmjs.com/package/hash-wasm)
+ * (c) Dani Biro
+ * @license MIT
+ */
+
+!function(A,I){"object"==typeof exports&&"undefined"!=typeof module?I(exports):"function"==typeof define&&define.amd?define(["exports"],I):I((A="undefined"!=typeof globalThis?globalThis:A||self).hashwasm=A.hashwasm||{})}(this,(function(A){"use strict";function I(A,I,i,C){return new(i||(i=Promise))((function(g,Q){function B(A){try{e(C.next(A))}catch(A){Q(A)}}function h(A){try{e(C.throw(A))}catch(A){Q(A)}}function e(A){var I;A.done?g(A.value):(I=A.value,I instanceof i?I:new i((function(A){A(I)}))).then(B,h)}e((C=C.apply(A,I||[])).next())}))}"function"==typeof SuppressedError&&SuppressedError;var i,C={name:"argon2",data:"AGFzbQEAAAABKQVgAX8Bf2AAAX9gEH9/f39/f39/f39/f39/f38AYAR/f39/AGACf38AAwYFAAECAwQFBgEBAoCAAgYIAX8BQZCoBAsHQQQGbWVtb3J5AgASSGFzaF9TZXRNZW1vcnlTaXplAAAOSGFzaF9HZXRCdWZmZXIAAQ5IYXNoX0NhbGN1bGF0ZQAECvEyBVgBAn9BACEBAkAgAEEAKAKICCICRg0AAkAgACACayIAQRB2IABBgIB8cSAASWoiAEAAQX9HDQBB/wHADwtBACEBQQBBACkDiAggAEEQdK18NwOICAsgAcALcAECfwJAQQAoAoAIIgANAEEAPwBBEHQiADYCgAhBACgCiAgiAUGAgCBGDQACQEGAgCAgAWsiAEEQdiAAQYCAfHEgAElqIgBAAEF/Rw0AQQAPC0EAQQApA4gIIABBEHStfDcDiAhBACgCgAghAAsgAAvcDgECfiAAIAQpAwAiECAAKQMAIhF8IBFCAYZC/v///x+DIBBC/////w+DfnwiEDcDACAMIBAgDCkDAIVCIIkiEDcDACAIIBAgCCkDACIRfCARQgGGQv7///8fgyAQQv////8Pg358IhA3AwAgBCAQIAQpAwCFQiiJIhA3AwAgACAQIAApAwAiEXwgEEL/////D4MgEUIBhkL+////H4N+fCIQNwMAIAwgECAMKQMAhUIwiSIQNwMAIAggECAIKQMAIhF8IBBC/////w+DIBFCAYZC/v///x+DfnwiEDcDACAEIBAgBCkDAIVCAYk3AwAgASAFKQMAIhAgASkDACIRfCARQgGGQv7///8fgyAQQv////8Pg358IhA3AwAgDSAQIA0pAwCFQiCJIhA3AwAgCSAQIAkpAwAiEXwgEUIBhkL+////H4MgEEL/////D4N+fCIQNwMAIAUgECAFKQMAhUIoiSIQNwMAIAEgECABKQMAIhF8IBBC/////w+DIBFCAYZC/v///x+DfnwiEDcDACANIBAgDSkDAIVCMIkiEDcDACAJIBAgCSkDACIRfCAQQv////8PgyARQgGGQv7///8fg358IhA3AwAgBSAQIAUpAwCFQgGJNwMAIAIgBikDACIQIAIpAwAiEXwgEUIBhkL+////H4MgEEL/////D4N+fCIQNwMAIA4gECAOKQMAhUIgiSIQNwMAIAogECAKKQMAIhF8IBFCAYZC/v///x+DIBBC/////w+DfnwiEDcDACAGIBAgBikDAIVCKIkiEDcDACACIBAgAikDACIRfCAQQv////8PgyARQgGGQv7///8fg358IhA3AwAgDiAQIA4pAwCFQjCJIhA3AwAgCiAQIAopAwAiEXwgEEL/////D4MgEUIBhkL+////H4N+fCIQNwMAIAYgECAGKQMAhUIBiTcDACADIAcpAwAiECADKQMAIhF8IBFCAYZC/v///x+DIBBC/////w+DfnwiEDcDACAPIBAgDykDAIVCIIkiEDcDACALIBAgCykDACIRfCARQgGGQv7///8fgyAQQv////8Pg358IhA3AwAgByAQIAcpAwCFQiiJIhA3AwAgAyAQIAMpAwAiEXwgEEL/////D4MgEUIBhkL+////H4N+fCIQNwMAIA8gECAPKQMAhUIwiSIQNwMAIAsgECALKQMAIhF8IBBC/////w+DIBFCAYZC/v///x+DfnwiEDcDACAHIBAgBykDAIVCAYk3AwAgACAFKQMAIhAgACkDACIRfCARQgGGQv7///8fgyAQQv////8Pg358IhA3AwAgDyAQIA8pAwCFQiCJIhA3AwAgCiAQIAopAwAiEXwgEUIBhkL+////H4MgEEL/////D4N+fCIQNwMAIAUgECAFKQMAhUIoiSIQNwMAIAAgECAAKQMAIhF8IBBC/////w+DIBFCAYZC/v///x+DfnwiEDcDACAPIBAgDykDAIVCMIkiEDcDACAKIBAgCikDACIRfCAQQv////8PgyARQgGGQv7///8fg358IhA3AwAgBSAQIAUpAwCFQgGJNwMAIAEgBikDACIQIAEpAwAiEXwgEUIBhkL+////H4MgEEL/////D4N+fCIQNwMAIAwgECAMKQMAhUIgiSIQNwMAIAsgECALKQMAIhF8IBFCAYZC/v///x+DIBBC/////w+DfnwiEDcDACAGIBAgBikDAIVCKIkiEDcDACABIBAgASkDACIRfCAQQv////8PgyARQgGGQv7///8fg358IhA3AwAgDCAQIAwpAwCFQjCJIhA3AwAgCyAQIAspAwAiEXwgEEL/////D4MgEUIBhkL+////H4N+fCIQNwMAIAYgECAGKQMAhUIBiTcDACACIAcpAwAiECACKQMAIhF8IBFCAYZC/v///x+DIBBC/////w+DfnwiEDcDACANIBAgDSkDAIVCIIkiEDcDACAIIBAgCCkDACIRfCARQgGGQv7///8fgyAQQv////8Pg358IhA3AwAgByAQIAcpAwCFQiiJIhA3AwAgAiAQIAIpAwAiEXwgEEL/////D4MgEUIBhkL+////H4N+fCIQNwMAIA0gECANKQMAhUIwiSIQNwMAIAggECAIKQMAIhF8IBBC/////w+DIBFCAYZC/v///x+DfnwiEDcDACAHIBAgBykDAIVCAYk3AwAgAyAEKQMAIhAgAykDACIRfCARQgGGQv7///8fgyAQQv////8Pg358IhA3AwAgDiAQIA4pAwCFQiCJIhA3AwAgCSAQIAkpAwAiEXwgEUIBhkL+////H4MgEEL/////D4N+fCIQNwMAIAQgECAEKQMAhUIoiSIQNwMAIAMgECADKQMAIhF8IBBC/////w+DIBFCAYZC/v///x+DfnwiEDcDACAOIBAgDikDAIVCMIkiEDcDACAJIBAgCSkDACIRfCAQQv////8PgyARQgGGQv7///8fg358IhA3AwAgBCAQIAQpAwCFQgGJNwMAC98aAQN/QQAhBEEAIAIpAwAgASkDAIU3A5AIQQAgAikDCCABKQMIhTcDmAhBACACKQMQIAEpAxCFNwOgCEEAIAIpAxggASkDGIU3A6gIQQAgAikDICABKQMghTcDsAhBACACKQMoIAEpAyiFNwO4CEEAIAIpAzAgASkDMIU3A8AIQQAgAikDOCABKQM4hTcDyAhBACACKQNAIAEpA0CFNwPQCEEAIAIpA0ggASkDSIU3A9gIQQAgAikDUCABKQNQhTcD4AhBACACKQNYIAEpA1iFNwPoCEEAIAIpA2AgASkDYIU3A/AIQQAgAikDaCABKQNohTcD+AhBACACKQNwIAEpA3CFNwOACUEAIAIpA3ggASkDeIU3A4gJQQAgAikDgAEgASkDgAGFNwOQCUEAIAIpA4gBIAEpA4gBhTcDmAlBACACKQOQASABKQOQAYU3A6AJQQAgAikDmAEgASkDmAGFNwOoCUEAIAIpA6ABIAEpA6ABhTcDsAlBACACKQOoASABKQOoAYU3A7gJQQAgAikDsAEgASkDsAGFNwPACUEAIAIpA7gBIAEpA7gBhTcDyAlBACACKQPAASABKQPAAYU3A9AJQQAgAikDyAEgASkD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",hash:"e4cdc523"};class g{constructor(){this.mutex=Promise.resolve()}lock(){let A=()=>{};return this.mutex=this.mutex.then((()=>new Promise(A))),new Promise((I=>{A=I}))}dispatch(A){return I(this,void 0,void 0,(function*(){const I=yield this.lock();try{return yield Promise.resolve(A())}finally{I()}}))}}const Q="undefined"!=typeof globalThis?globalThis:"undefined"!=typeof self?self:"undefined"!=typeof window?window:global,B=null!==(i=Q.Buffer)&&void 0!==i?i:null,h=Q.TextEncoder?new Q.TextEncoder:null;function e(A,I){return(15&A)+(A>>6|A>>3&8)<<4|(15&I)+(I>>6|I>>3&8)}function w(A,I){const i=I.length>>1;for(let C=0;C<i;C++){const i=C<<1;A[C]=e(I.charCodeAt(i),I.charCodeAt(i+1))}}const t="a".charCodeAt(0)-10,o="0".charCodeAt(0);function E(A,I,i){let C=0;for(let g=0;g<i;g++){let i=I[g]>>>4;A[C++]=i>9?i+t:i+o,i=15&I[g],A[C++]=i>9?i+t:i+o}return String.fromCharCode.apply(null,A)}const n=null!==B?A=>{if("string"==typeof A){const I=B.from(A,"utf8");return new Uint8Array(I.buffer,I.byteOffset,I.length)}if(B.isBuffer(A))return new Uint8Array(A.buffer,A.byteOffset,A.length);if(ArrayBuffer.isView(A))return new Uint8Array(A.buffer,A.byteOffset,A.byteLength);throw new Error("Invalid data type!")}:A=>{if("string"==typeof A)return h.encode(A);if(ArrayBuffer.isView(A))return new Uint8Array(A.buffer,A.byteOffset,A.byteLength);throw new Error("Invalid data type!")},r="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",D=new Uint8Array(256);for(let A=0;A<r.length;A++)D[r.charCodeAt(A)]=A;function F(A,I=!0){const i=A.length,C=i%3,g=[],Q=i-C;for(let I=0;I<Q;I+=3){const i=(A[I]<<16&16711680)+(A[I+1]<<8&65280)+(255&A[I+2]),C=r.charAt(i>>18&63)+r.charAt(i>>12&63)+r.charAt(i>>6&63)+r.charAt(63&i);g.push(C)}if(1===C){const C=A[i-1],Q=r.charAt(C>>2),B=r.charAt(C<<4&63);g.push(`${Q}${B}`),I&&g.push("==")}else if(2===C){const C=(A[i-2]<<8)+A[i-1],Q=r.charAt(C>>10),B=r.charAt(C>>4&63),h=r.charAt(C<<2&63);g.push(`${Q}${B}${h}`),I&&g.push("=")}return g.join("")}function f(A){let I=Math.floor(.75*A.length);const i=A.length;return"="===A[i-1]&&(I-=1,"="===A[i-2]&&(I-=1)),I}function k(A){const I=f(A),i=A.length,C=new Uint8Array(I);let g=0;for(let I=0;I<i;I+=4){const i=D[A.charCodeAt(I)],Q=D[A.charCodeAt(I+1)],B=D[A.charCodeAt(I+2)],h=D[A.charCodeAt(I+3)];C[g]=i<<2|Q>>4,g+=1,C[g]=(15&Q)<<4|B>>2,g+=1,C[g]=(3&B)<<6|63&h,g+=1}return C}const a=16384,s=new g,S=new Map;function U(A,i){return I(this,void 0,void 0,(function*(){let C=null,g=null,Q=!1;if("undefined"==typeof WebAssembly)throw new Error("WebAssembly is not supported in this environment!");const B=()=>new DataView(C.exports.memory.buffer).getUint32(C.exports.STATE_SIZE,!0),h=s.dispatch((()=>I(this,void 0,void 0,(function*(){if(!S.has(A.name)){const I=k(A.data),i=WebAssembly.compile(I);S.set(A.name,i)}const I=yield S.get(A.name);C=yield WebAssembly.instantiate(I,{})})))),t=(A=null)=>{Q=!0,C.exports.Hash_Init(A)},o=A=>{if(!Q)throw new Error("update() called before init()");(A=>{let I=0;for(;I<A.length;){const i=A.subarray(I,I+a);I+=i.length,g.set(i),C.exports.Hash_Update(i.length)}})(n(A))},r=new Uint8Array(2*i),D=(A,I=null)=>{if(!Q)throw new Error("digest() called before init()");return Q=!1,C.exports.Hash_Final(I),"binary"===A?g.slice(0,i):E(r,g,i)},F=A=>"string"==typeof A?A.length<4096:A.byteLength<a;let f=F;switch(A.name){case"argon2":case"scrypt":f=()=>!0;break;case"blake2b":case"blake2s":f=(A,I)=>I<=512&&F(A);break;case"blake3":f=(A,I)=>0===I&&F(A);break;case"xxhash64":case"xxhash3":case"xxhash128":case"crc64":f=()=>!1}return yield(()=>I(this,void 0,void 0,(function*(){C||(yield h);const A=C.exports.Hash_GetBuffer(),I=C.exports.memory.buffer;g=new Uint8Array(I,A,a)})))(),{getMemory:()=>g,writeMemory:(A,I=0)=>{g.set(A,I)},getExports:()=>C.exports,setMemorySize:A=>{C.exports.Hash_SetMemorySize(A);const I=C.exports.Hash_GetBuffer(),i=C.exports.memory.buffer;g=new Uint8Array(i,I,A)},init:t,update:o,digest:D,save:()=>{if(!Q)throw new Error("save() can only be called after init() and before digest()");const I=C.exports.Hash_GetState(),i=B(),g=C.exports.memory.buffer,h=new Uint8Array(g,I,i),e=new Uint8Array(4+i);return w(e,A.hash),e.set(h,4),e},load:I=>{if(!(I instanceof Uint8Array))throw new Error("load() expects an Uint8Array generated by save()");const i=C.exports.Hash_GetState(),g=B(),h=4+g,w=C.exports.memory.buffer;if(I.length!==h)throw new Error(`Bad state length (expected ${h} bytes, got ${I.length})`);if(!function(A,I){if(A.length!==2*I.length)return!1;for(let i=0;i<I.length;i++){const C=i<<1;if(I[i]!==e(A.charCodeAt(C),A.charCodeAt(C+1)))return!1}return!0}(A.hash,I.subarray(0,4)))throw new Error("This state was written by an incompatible hash implementation");const t=I.subarray(4);new Uint8Array(w,i,g).set(t),Q=!0},calculate:(A,I=null,Q=null)=>{if(!f(A,I))return t(I),o(A),D("hex",Q);const B=n(A);return g.set(B),C.exports.Hash_Calculate(B.length,I,Q),E(r,g,i)},hashLength:i}}))}var c={name:"blake2b",data:"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",hash:"c6f286e6"};function G(A){return!Number.isInteger(A)||A<8||A>512||A%8!=0?new Error("Invalid variant! Valid values: 8, 16, ..., 512"):null}function p(A=512,I=null){if(G(A))return Promise.reject(G(A));let i=null,C=A;if(null!==I){if(i=n(I),i.length>64)return Promise.reject(new Error("Max key length is 64 bytes"));g=A,Q=i.length,C=g|Q<<16}var g,Q;const B=A/8;return U(c,B).then((A=>{C>512&&A.writeMemory(i),A.init(C);const I={init:C>512?()=>(A.writeMemory(i),A.init(C),I):()=>(A.init(C),I),update:i=>(A.update(i),I),digest:I=>A.digest(I),save:()=>A.save(),load:i=>(A.load(i),I),blockSize:128,digestSize:B};return I}))}new g;const y=new DataView(new ArrayBuffer(4));function J(A){return y.setInt32(0,A,!0),new Uint8Array(y.buffer)}function l(A,i,C){return I(this,void 0,void 0,(function*(){if(C<=64){const A=yield p(8*C);return A.update(J(C)),A.update(i),A.digest("binary")}const I=Math.ceil(C/32)-2,g=new Uint8Array(C);A.init(),A.update(J(C)),A.update(i);let Q=A.digest("binary");g.set(Q.subarray(0,32),0);for(let i=1;i<I;i++)A.init(),A.update(Q),Q=A.digest("binary"),g.set(Q.subarray(0,32),32*i);const B=C-32*I;let h;return 64===B?(h=A,h.init()):h=yield p(8*B),h.update(Q),Q=h.digest("binary"),g.set(Q.subarray(0,B),32*I),g}))}function u(A){return I(this,void 0,void 0,(function*(){var I;const{parallelism:i,iterations:g,hashLength:Q}=A,B=n(A.password),h=n(A.salt),e=function(A){switch(A){case"d":return 0;case"i":return 1;default:return 2}}(A.hashType),{memorySize:t}=A,o=n(null!==(I=A.secret)&&void 0!==I?I:""),[r,D]=yield Promise.all([U(C,1024),p(512)]);r.setMemorySize(1024*t+1024);const f=new Uint8Array(24),k=new DataView(f.buffer);k.setInt32(0,i,!0),k.setInt32(4,Q,!0),k.setInt32(8,t,!0),k.setInt32(12,g,!0),k.setInt32(16,19,!0),k.setInt32(20,e,!0),r.writeMemory(f,1024*t),D.init(),D.update(f),D.update(J(B.length)),D.update(B),D.update(J(h.length)),D.update(h),D.update(J(o.length)),D.update(o),D.update(J(0));const a=4*Math.floor(t/(4*i)),s=new Uint8Array(72),S=D.digest("binary");s.set(S);for(let A=0;A<i;A++){s.set(J(0),64),s.set(J(A),68);let I=A*a,i=yield l(D,s,1024);r.writeMemory(i,1024*I),I+=1,s.set(J(1),64),i=yield l(D,s,1024),r.writeMemory(i,1024*I)}const c=new Uint8Array(1024);w(c,r.calculate(new Uint8Array([]),t));const G=yield l(D,c,Q);if("hex"===A.outputType){return E(new Uint8Array(2*Q),G,Q)}return"encoded"===A.outputType?function(A,I,i){const C=[`m=${I.memorySize}`,`t=${I.iterations}`,`p=${I.parallelism}`].join(",");return`$argon2${I.hashType}$v=19$${C}$${F(A,!1)}$${F(i,!1)}`}(h,A,G):G}))}const H=A=>{var I;if(!A||"object"!=typeof A)throw new Error("Invalid options parameter. It requires an object.");if(!A.password)throw new Error("Password must be specified");if(A.password=n(A.password),A.password.length<1)throw new Error("Password must be specified");if(!A.salt)throw new Error("Salt must be specified");if(A.salt=n(A.salt),A.salt.length<8)throw new Error("Salt should be at least 8 bytes long");if(A.secret=n(null!==(I=A.secret)&&void 0!==I?I:""),!Number.isInteger(A.iterations)||A.iterations<1)throw new Error("Iterations should be a positive number");if(!Number.isInteger(A.parallelism)||A.parallelism<1)throw new Error("Parallelism should be a positive number");if(!Number.isInteger(A.hashLength)||A.hashLength<4)throw new Error("Hash length should be at least 4 bytes.");if(!Number.isInteger(A.memorySize))throw new Error("Memory size should be specified.");if(A.memorySize<8*A.parallelism)throw new Error("Memory size should be at least 8 * parallelism.");if(void 0===A.outputType&&(A.outputType="hex"),!["hex","binary","encoded"].includes(A.outputType))throw new Error(`Insupported output type ${A.outputType}. Valid values: ['hex', 'binary', 'encoded']`)};A.argon2Verify=function(A){return I(this,void 0,void 0,(function*(){(A=>{if(!A||"object"!=typeof A)throw new Error("Invalid options parameter. It requires an object.");if(void 0===A.hash||"string"!=typeof A.hash)throw new Error("Hash should be specified")})(A);const I=((A,I,i)=>{const C=I.match(/^\$argon2(id|i|d)\$v=([0-9]+)\$((?:[mtp]=[0-9]+,){2}[mtp]=[0-9]+)\$([A-Za-z0-9+/]+)\$([A-Za-z0-9+/]+)$/);if(!C)throw new Error("Invalid hash");const[,g,Q,B,h,e]=C;if("19"!==Q)throw new Error(`Unsupported version: ${Q}`);const w={},t={m:"memorySize",p:"parallelism",t:"iterations"};for(const A of B.split(",")){const[I,i]=A.split("=");w[t[I]]=Number(i)}return Object.assign(Object.assign({},w),{password:A,secret:i,hashType:g,salt:k(h),hashLength:f(e),outputType:"encoded"})})(A.password,A.hash,A.secret);H(I);const i=A.hash.lastIndexOf("$")+1;return(yield u(I)).substring(i)===A.hash.substring(i)}))},A.argon2d=function(A){return I(this,void 0,void 0,(function*(){return H(A),u(Object.assign(Object.assign({},A),{hashType:"d"}))}))},A.argon2i=function(A){return I(this,void 0,void 0,(function*(){return H(A),u(Object.assign(Object.assign({},A),{hashType:"i"}))}))},A.argon2id=function(A){return I(this,void 0,void 0,(function*(){return H(A),u(Object.assign(Object.assign({},A),{hashType:"id"}))}))}}));
+
+</script>
+<script>
+"use strict";
+(() => {
+  // ===== Chiffrement (identique dans index.html et setup.html) =====
+  // Clé = Argon2id(identifiant normalisé + ":" + mot de passe, sel) -> AES-256-GCM.
+  // Aucun hachage du mot de passe n'est stocké : une connexion correcte = un déchiffrement GCM réussi.
+  const CRYPTO_V = 2;
+  const KDF_DEFAUT = { kdf: "argon2id", m: 65536, t: 3, p: 1 }; // m en Kio (64 Mio)
+
+  const b64enc = u8 => { let s = ""; for (let i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]); return btoa(s); };
+  const b64dec = s => Uint8Array.from(atob(s), ch => ch.charCodeAt(0));
+
+  // Données authentifiées : les paramètres du fichier ne peuvent pas être modifiés sans faire échouer GCM.
+  const aadDe = h => new TextEncoder().encode(`suivi-candidatures|v${h.v}|${h.kdf}|m=${h.m}|t=${h.t}|p=${h.p}`);
+
+  function verifierParams(h) {
+    if (!h || h.v !== CRYPTO_V || h.kdf !== "argon2id") throw new Error("format");
+    for (const k of ["m", "t", "p"]) if (!Number.isInteger(h[k])) throw new Error("format");
+    if (h.m < 19456 || h.m > 1048576 || h.t < 1 || h.t > 20 || h.p < 1 || h.p > 8) throw new Error("format");
+  }
+
+  async function deriverCle(identifiant, motDePasse, sel, h) {
+    const secret = new TextEncoder().encode(String(identifiant).trim().toLowerCase() + ":" + motDePasse);
+    try {
+      const brut = await hashwasm.argon2id({
+        password: secret, salt: sel, parallelism: h.p, iterations: h.t,
+        memorySize: h.m, hashLength: 32, outputType: "binary"
+      });
+      try {
+        return await crypto.subtle.importKey("raw", brut, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+      } finally { brut.fill(0); }
+    } finally { secret.fill(0); }
+  }
+
+  async function chiffrer(identifiant, motDePasse, texteClair, params = KDF_DEFAUT) {
+    const h = { v: CRYPTO_V, kdf: params.kdf, m: params.m, t: params.t, p: params.p };
+    verifierParams(h);
+    const sel = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const cle = await deriverCle(identifiant, motDePasse, sel, h);
+    const ct = new Uint8Array(await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv, additionalData: aadDe(h) }, cle, new TextEncoder().encode(texteClair)));
+    return { ...h, salt: b64enc(sel), iv: b64enc(iv), ct: b64enc(ct) };
+  }
+
+  // Renvoie le texte clair, ou lève une erreur (mauvais identifiants ou fichier invalide).
+  async function dechiffrer(identifiant, motDePasse, fichier) {
+    verifierParams(fichier);
+    const sel = b64dec(fichier.salt), iv = b64dec(fichier.iv), ct = b64dec(fichier.ct);
+    if (sel.length < 16 || iv.length !== 12) throw new Error("format");
+    const cle = await deriverCle(identifiant, motDePasse, sel, fichier);
+    const clair = await crypto.subtle.decrypt({ name: "AES-GCM", iv, additionalData: aadDe(fichier) }, cle, ct);
+    return new TextDecoder().decode(clair);
+  }
+
+  // Vérifie qu'un texte JSON a la structure attendue par le tableau de bord.
+  const CHAMPS = ["poste", "entreprise", "secteur", "ville", "date", "trajet", "statut"];
+  function validerDonnees(data) {
+    if (!Array.isArray(data)) throw new Error("Le JSON doit être un tableau de candidatures.");
+    data.forEach((c, i) => {
+      if (!c || typeof c !== "object") throw new Error(`Entrée ${i + 1} : objet attendu.`);
+      for (const k of CHAMPS) if (!(k in c)) throw new Error(`Entrée ${i + 1} : champ « ${k} » manquant.`);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(c.date))) throw new Error(`Entrée ${i + 1} : date au format AAAA-MM-JJ attendue.`);
+    });
+    return data;
+  }
+
+
   // ===== Configuration =====
   const DOMICILE = "Mérit-Kichy"; // Lieu de domicile (à corriger si besoin)
-  const STORAGE_KEY = "suivi-candidatures-v1";
+  // Seuls les ajouts locaux (et les indices des entrées masquées) sont stockés ici,
+  // jamais les données déchiffrées.
+  const STORAGE_KEY = "suivi-candidatures-v2";
+  const FICHIER_CHIFFRE = "data.enc.json";
 
   const STATUTS = {
     "Refusée": "refusee",
@@ -144,38 +262,30 @@
     "Validée": "validee"
   };
 
-  // ===== Données d'exemple (entreprises fictives) =====
-  const EXEMPLES = [
-    { poste: "Vendeur / Vendeuse", entreprise: "Boulangerie Exemple", secteur: "Vente", ville: "Villeneuve-Démo", date: "2026-10-02", trajet: 12, statut: "Refusée" },
-    { poste: "Préparateur de commandes", entreprise: "Logistique Démo", secteur: "Logistique", ville: "Zone Fictive Nord", date: "2026-10-05", trajet: 35, statut: "En cours d'examen" },
-    { poste: "Livreur à vélo", entreprise: "Coursiers Imaginaires", secteur: "Livraison", ville: "Centre-Exemple", date: "2026-10-08", trajet: 8, statut: "Validée" },
-    { poste: "Commis de cuisine", entreprise: "Brasserie Fictive", secteur: "Restauration", ville: "Port-Démo", date: "2026-10-11", trajet: 22, statut: "Refusée" },
-    { poste: "Opérateur de production", entreprise: "Usine Test & Cie", secteur: "Industrie", ville: "Zone Industrielle Exemple", date: "2026-10-14", trajet: 45, statut: "En cours d'examen" },
-    { poste: "Caissier / Caissière", entreprise: "Supérette Modèle", secteur: "Vente", ville: "Mérit-Kichy", date: "2026-10-17", trajet: 5, statut: "Validée" },
-    { poste: "Cariste", entreprise: "Entrepôt Échantillon", secteur: "Logistique", ville: "Plateforme Démo Sud", date: "2026-10-20", trajet: 28, statut: "Refusée" },
-    { poste: "Chauffeur-livreur VL", entreprise: "Express Fictif", secteur: "Livraison", ville: "Villeneuve-Démo", date: "2026-10-23", trajet: 15, statut: "En cours d'examen" },
-    { poste: "Serveur / Serveuse", entreprise: "Café Prototype", secteur: "Restauration", ville: "Centre-Exemple", date: "2026-10-27", trajet: 10, statut: "En cours d'examen" },
-    { poste: "Agent de conditionnement", entreprise: "Atelier Maquette", secteur: "Industrie", ville: "Zone Fictive Nord", date: "2026-10-30", trajet: 38, statut: "Validée" },
-    { poste: "Conseiller de vente", entreprise: "Magasin Témoin", secteur: "Vente", ville: "Port-Démo", date: "2026-11-01", trajet: 25, statut: "En cours d'examen" },
-    { poste: "Équipier polyvalent", entreprise: "Restaurant Exemplaire", secteur: "Restauration", ville: "Mérit-Kichy", date: "2026-11-02", trajet: 7, statut: "Refusée" }
-  ];
+  // ===== État (en mémoire uniquement) =====
+  let base = [];          // entrées déchiffrées depuis data.enc.json
+  let idFichier = "";     // sel du fichier, sert à rattacher les suppressions locales
+  let local = { ajouts: [], masques: {} };
+  let candidatures = [];  // vue combinée affichée
 
-  // ===== État =====
-  let candidatures = charger();
-
-  function charger() {
+  function chargerLocal() {
     try {
-      const brut = localStorage.getItem(STORAGE_KEY);
-      if (brut) {
-        const data = JSON.parse(brut);
-        if (Array.isArray(data)) return data;
-      }
-    } catch (e) { /* stockage indisponible : on utilise les exemples */ }
-    return EXEMPLES.map(c => ({ ...c }));
+      const d = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (d && Array.isArray(d.ajouts) && d.masques && typeof d.masques === "object") return d;
+    } catch (e) { /* stockage indisponible */ }
+    return { ajouts: [], masques: {} };
   }
 
   function sauvegarder() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(candidatures)); } catch (e) { /* ignoré */ }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(local)); } catch (e) { /* ignoré */ }
+  }
+
+  function recomposer() {
+    const masques = new Set(local.masques[idFichier] || []);
+    candidatures = [
+      ...base.map((c, i) => ({ ...c, _src: "base", _i: i })).filter(c => !masques.has(c._i)),
+      ...local.ajouts.map((c, i) => ({ ...c, _src: "local", _i: i }))
+    ];
   }
 
   // ===== Utilitaires =====
@@ -277,12 +387,68 @@
   }
 
   function toutRafraichir() {
+    recomposer();
     majFiltres();
     majCompteurs();
     afficher();
   }
 
-  // ===== Événements =====
+  // ===== Connexion / déconnexion =====
+  const msg = (texte, type) => { $("login-msg").textContent = texte; $("login-msg").className = "login-msg " + (type || ""); };
+
+  $("login-form").addEventListener("submit", async e => {
+    e.preventDefault();
+    const champId = $("username"), champMdp = $("password");
+    if (!champId.value.trim() || !champMdp.value) { msg("Identifiant ou mot de passe incorrect.", "erreur"); return; }
+    $("login-btn").disabled = true;
+    msg("Vérification…", "info");
+    // Laisse le navigateur afficher « Vérification… » avant le calcul Argon2id.
+    await new Promise(r => setTimeout(r, 30));
+    let fichier;
+    try {
+      const rep = await fetch(FICHIER_CHIFFRE, { cache: "no-store", credentials: "omit" });
+      if (!rep.ok) throw new Error("http");
+      fichier = await rep.json();
+    } catch (err) {
+      $("login-btn").disabled = false;
+      msg("Données chiffrées indisponibles. Réessayez plus tard.", "erreur");
+      return;
+    }
+    try {
+      const texte = await dechiffrer(champId.value, champMdp.value, fichier);
+      base = validerDonnees(JSON.parse(texte));
+      idFichier = fichier.salt;
+    } catch (err) {
+      $("login-btn").disabled = false;
+      champMdp.value = "";
+      msg("Identifiant ou mot de passe incorrect.", "erreur");
+      return;
+    }
+    champMdp.value = "";
+    $("login-btn").disabled = false;
+    msg("");
+    local = chargerLocal();
+    $("vue-login").hidden = true;
+    $("vue-app").hidden = false;
+    toutRafraichir();
+  });
+
+  $("logout").addEventListener("click", () => {
+    base = []; candidatures = []; idFichier = ""; local = { ajouts: [], masques: {} };
+    $("list").innerHTML = "";
+    $("f-search").value = "";
+    ["f-statut", "f-secteur", "f-entreprise"].forEach(id => { $(id).innerHTML = ""; });
+    $("secteurs-list").innerHTML = "";
+    $("result-count").textContent = "";
+    ["c-total", "c-refusee", "c-examen", "c-validee"].forEach(id => { $(id).textContent = "0"; });
+    $("vue-app").hidden = true;
+    $("vue-login").hidden = false;
+    $("login-form").reset();
+    msg("");
+    $("username").focus();
+  });
+
+  // ===== Événements du tableau de bord =====
   $("domicile-label").textContent = DOMICILE;
   $("add-statut").innerHTML = Object.keys(STATUTS).map(s => `<option value="${echapper(s)}">${echapper(s)}</option>`).join("");
   $("add-statut").value = "En cours d'examen";
@@ -295,9 +461,17 @@
   $("list").addEventListener("click", e => {
     const btn = e.target.closest(".btn-del");
     if (!btn) return;
-    const i = Number(btn.dataset.index);
-    if (confirm(`Supprimer « ${candidatures[i].poste} — ${candidatures[i].entreprise} » ?`)) {
-      candidatures.splice(i, 1);
+    const c = candidatures[Number(btn.dataset.index)];
+    if (!c) return;
+    if (confirm(`Supprimer « ${c.poste} — ${c.entreprise} » ?`)) {
+      if (c._src === "local") {
+        local.ajouts.splice(c._i, 1);
+      } else {
+        // On ne stocke que l'indice (aucun contenu) de l'entrée chiffrée masquée.
+        const m = new Set(local.masques[idFichier] || []);
+        m.add(c._i);
+        local.masques = { [idFichier]: [...m].sort((a, b) => a - b) };
+      }
       sauvegarder();
       toutRafraichir();
     }
@@ -306,7 +480,7 @@
   $("add-form").addEventListener("submit", e => {
     e.preventDefault();
     const f = new FormData(e.target);
-    candidatures.push({
+    local.ajouts.push({
       poste: f.get("poste").trim(),
       entreprise: f.get("entreprise").trim(),
       secteur: f.get("secteur").trim(),
@@ -322,13 +496,12 @@
   });
 
   $("reset").addEventListener("click", () => {
-    if (!confirm("Remplacer toutes les candidatures par les données d'exemple ?")) return;
-    candidatures = EXEMPLES.map(c => ({ ...c }));
+    if (!confirm("Supprimer les ajouts locaux et réafficher toutes les candidatures chiffrées ?")) return;
+    local = { ajouts: [], masques: {} };
     try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignoré */ }
     toutRafraichir();
   });
-
-  toutRafraichir();
+})();
 </script>
 </body>
 </html>
