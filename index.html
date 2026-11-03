@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suivi de candidatures</title>
+<style>
+  :root {
+    --bg: #f4f6fb; --card: #ffffff; --text: #1f2937; --muted: #6b7280; --border: #e5e7eb;
+    --primary: #4f46e5; --primary-dark: #4338ca;
+    --red: #dc2626; --red-bg: #fee2e2; --amber: #b45309; --amber-bg: #fef3c7;
+    --green: #15803d; --green-bg: #dcfce7;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.45; }
+  header { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; padding: 1.5rem 1rem 3.5rem; }
+  header h1 { margin: 0 0 .25rem; font-size: 1.6rem; }
+  header p { margin: 0; opacity: .9; font-size: .95rem; }
+  main { max-width: 1100px; margin: -2.5rem auto 2rem; padding: 0 1rem; }
+  .banner { background: #fff7ed; border: 1px dashed #f59e0b; color: #92400e; border-radius: 10px; padding: .6rem .9rem; margin-bottom: 1rem; font-size: .9rem; }
+  .banner strong { text-transform: uppercase; letter-spacing: .03em; }
+  .counters { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; margin-bottom: 1rem; }
+  .counter { background: var(--card); border-radius: 12px; padding: .9rem; box-shadow: 0 1px 3px rgba(0,0,0,.08); border-top: 4px solid var(--primary); }
+  .counter .num { font-size: 1.7rem; font-weight: 700; }
+  .counter .lbl { font-size: .85rem; color: var(--muted); }
+  .counter.refusee { border-top-color: var(--red); } .counter.refusee .num { color: var(--red); }
+  .counter.examen { border-top-color: #f59e0b; } .counter.examen .num { color: var(--amber); }
+  .counter.validee { border-top-color: #22c55e; } .counter.validee .num { color: var(--green); }
+  .panel { background: var(--card); border-radius: 12px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 1rem; }
+  .panel h2 { margin: 0 0 .75rem; font-size: 1.05rem; }
+  .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .75rem; }
+  label { display: flex; flex-direction: column; font-size: .8rem; color: var(--muted); gap: .25rem; }
+  input, select { font: inherit; font-size: .95rem; padding: .5rem .6rem; border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--text); }
+  input:focus, select:focus { outline: 2px solid #c7d2fe; border-color: var(--primary); }
+  button { font: inherit; font-size: .9rem; border: none; border-radius: 8px; padding: .55rem .9rem; cursor: pointer; }
+  .btn-primary { background: var(--primary); color: #fff; } .btn-primary:hover { background: var(--primary-dark); }
+  .btn-ghost { background: #eef2ff; color: var(--primary-dark); } .btn-ghost:hover { background: #e0e7ff; }
+  .btn-del { background: transparent; color: var(--muted); padding: .2rem .45rem; font-size: .8rem; }
+  .btn-del:hover { color: var(--red); background: var(--red-bg); }
+  .toolbar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: space-between; margin: .25rem 0 .75rem; }
+  .result-count { font-size: .9rem; color: var(--muted); }
+  .list { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: .75rem; }
+  .card { background: var(--card); border-radius: 12px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.08); border-left: 5px solid var(--border); display: flex; flex-direction: column; gap: .45rem; }
+  .card.refusee { border-left-color: var(--red); } .card.examen { border-left-color: #f59e0b; } .card.validee { border-left-color: #22c55e; }
+  .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .5rem; }
+  .card h3 { margin: 0; font-size: 1.05rem; }
+  .company { color: var(--muted); font-size: .9rem; }
+  .meta { display: flex; flex-wrap: wrap; gap: .35rem; font-size: .82rem; }
+  .chip { background: #f3f4f6; border-radius: 999px; padding: .15rem .55rem; }
+  .card-foot { display: flex; justify-content: space-between; align-items: center; margin-top: .2rem; }
+  .badge { display: inline-block; font-size: .78rem; font-weight: 600; padding: .2rem .6rem; border-radius: 999px; white-space: nowrap; }
+  .badge.refusee { background: var(--red-bg); color: var(--red); }
+  .badge.examen { background: var(--amber-bg); color: var(--amber); }
+  .badge.validee { background: var(--green-bg); color: var(--green); }
+  .empty { text-align: center; color: var(--muted); padding: 2rem 1rem; background: var(--card); border-radius: 12px; }
+  details summary { cursor: pointer; font-weight: 600; }
+  form.add { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .75rem; margin-top: .9rem; }
+  form.add .actions { display: flex; align-items: flex-end; }
+  footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 1rem; }
+  @media (max-width: 600px) {
+    .counters { grid-template-columns: repeat(2, 1fr); }
+    header h1 { font-size: 1.35rem; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Suivi de candidatures</h1>
+  <p>Temps de trajet calculé depuis le domicile : <strong id="domicile-label"></strong></p>
+</header>
+
+<main>
+  <div class="banner" role="note"><strong>Données d'exemple</strong> — les entreprises et offres affichées sont fictives. Vos ajouts sont enregistrés uniquement dans ce navigateur.</div>
+
+  <section class="counters" aria-label="Compteurs">
+    <div class="counter"><div class="num" id="c-total">0</div><div class="lbl">Total</div></div>
+    <div class="counter examen"><div class="num" id="c-examen">0</div><div class="lbl">En cours d'examen</div></div>
+    <div class="counter validee"><div class="num" id="c-validee">0</div><div class="lbl">Validées</div></div>
+    <div class="counter refusee"><div class="num" id="c-refusee">0</div><div class="lbl">Refusées</div></div>
+  </section>
+
+  <section class="panel" aria-label="Tri et filtres">
+    <h2>Trier et filtrer</h2>
+    <div class="controls">
+      <label>Recherche
+        <input type="search" id="f-search" placeholder="Poste, entreprise, ville…">
+      </label>
+      <label>Trier par
+        <select id="sort">
+          <option value="date-desc">Date (plus récente)</option>
+          <option value="date-asc">Date (plus ancienne)</option>
+          <option value="secteur">Secteur (A → Z)</option>
+          <option value="entreprise">Entreprise (A → Z)</option>
+          <option value="trajet">Temps de trajet (plus court)</option>
+        </select>
+      </label>
+      <label>Statut
+        <select id="f-statut"><option value="">Tous</option></select>
+      </label>
+      <label>Secteur
+        <select id="f-secteur"><option value="">Tous</option></select>
+      </label>
+      <label>Entreprise
+        <select id="f-entreprise"><option value="">Toutes</option></select>
+      </label>
+    </div>
+  </section>
+
+  <div class="toolbar">
+    <span class="result-count" id="result-count"></span>
+    <button type="button" class="btn-ghost" id="reset">Réinitialiser les exemples</button>
+  </div>
+
+  <section class="list" id="list" aria-live="polite"></section>
+
+  <section class="panel" style="margin-top:1rem">
+    <details>
+      <summary>➕ Ajouter une candidature</summary>
+      <form class="add" id="add-form">
+        <label>Poste<input name="poste" required></label>
+        <label>Entreprise<input name="entreprise" required></label>
+        <label>Secteur<input name="secteur" list="secteurs-list" required></label>
+        <label>Ville<input name="ville" required></label>
+        <label>Date de candidature<input type="date" name="date" required></label>
+        <label>Temps de trajet (min)<input type="number" name="trajet" min="0" max="600" required></label>
+        <label>Statut<select name="statut" id="add-statut"></select></label>
+        <div class="actions"><button type="submit" class="btn-primary">Ajouter</button></div>
+        <datalist id="secteurs-list"></datalist>
+      </form>
+    </details>
+  </section>
+</main>
+
+<footer>Maquette — aucune donnée n'est envoyée à un serveur.</footer>
+
+<script>
+  // ===== Configuration =====
+  const DOMICILE = "Mérit-Kichy"; // Lieu de domicile (à corriger si besoin)
+  const STORAGE_KEY = "suivi-candidatures-v1";
+
+  const STATUTS = {
+    "Refusée": "refusee",
+    "En cours d'examen": "examen",
+    "Validée": "validee"
+  };
+
+  // ===== Données d'exemple (entreprises fictives) =====
+  const EXEMPLES = [
+    { poste: "Vendeur / Vendeuse", entreprise: "Boulangerie Exemple", secteur: "Vente", ville: "Villeneuve-Démo", date: "2026-10-02", trajet: 12, statut: "Refusée" },
+    { poste: "Préparateur de commandes", entreprise: "Logistique Démo", secteur: "Logistique", ville: "Zone Fictive Nord", date: "2026-10-05", trajet: 35, statut: "En cours d'examen" },
+    { poste: "Livreur à vélo", entreprise: "Coursiers Imaginaires", secteur: "Livraison", ville: "Centre-Exemple", date: "2026-10-08", trajet: 8, statut: "Validée" },
+    { poste: "Commis de cuisine", entreprise: "Brasserie Fictive", secteur: "Restauration", ville: "Port-Démo", date: "2026-10-11", trajet: 22, statut: "Refusée" },
+    { poste: "Opérateur de production", entreprise: "Usine Test & Cie", secteur: "Industrie", ville: "Zone Industrielle Exemple", date: "2026-10-14", trajet: 45, statut: "En cours d'examen" },
+    { poste: "Caissier / Caissière", entreprise: "Supérette Modèle", secteur: "Vente", ville: "Mérit-Kichy", date: "2026-10-17", trajet: 5, statut: "Validée" },
+    { poste: "Cariste", entreprise: "Entrepôt Échantillon", secteur: "Logistique", ville: "Plateforme Démo Sud", date: "2026-10-20", trajet: 28, statut: "Refusée" },
+    { poste: "Chauffeur-livreur VL", entreprise: "Express Fictif", secteur: "Livraison", ville: "Villeneuve-Démo", date: "2026-10-23", trajet: 15, statut: "En cours d'examen" },
+    { poste: "Serveur / Serveuse", entreprise: "Café Prototype", secteur: "Restauration", ville: "Centre-Exemple", date: "2026-10-27", trajet: 10, statut: "En cours d'examen" },
+    { poste: "Agent de conditionnement", entreprise: "Atelier Maquette", secteur: "Industrie", ville: "Zone Fictive Nord", date: "2026-10-30", trajet: 38, statut: "Validée" },
+    { poste: "Conseiller de vente", entreprise: "Magasin Témoin", secteur: "Vente", ville: "Port-Démo", date: "2026-11-01", trajet: 25, statut: "En cours d'examen" },
+    { poste: "Équipier polyvalent", entreprise: "Restaurant Exemplaire", secteur: "Restauration", ville: "Mérit-Kichy", date: "2026-11-02", trajet: 7, statut: "Refusée" }
+  ];
+
+  // ===== État =====
+  let candidatures = charger();
+
+  function charger() {
+    try {
+      const brut = localStorage.getItem(STORAGE_KEY);
+      if (brut) {
+        const data = JSON.parse(brut);
+        if (Array.isArray(data)) return data;
+      }
+    } catch (e) { /* stockage indisponible : on utilise les exemples */ }
+    return EXEMPLES.map(c => ({ ...c }));
+  }
+
+  function sauvegarder() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(candidatures)); } catch (e) { /* ignoré */ }
+  }
+
+  // ===== Utilitaires =====
+  const $ = id => document.getElementById(id);
+  const collator = new Intl.Collator("fr", { sensitivity: "base" });
+  const normaliser = s => String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  function echapper(s) {
+    return String(s).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+  }
+
+  function formaterDate(iso) {
+    const d = new Date(iso + "T00:00:00");
+    if (isNaN(d)) return iso;
+    return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  }
+
+  function remplirSelect(select, valeurs, libelleTous) {
+    const actuelle = select.value;
+    select.innerHTML = `<option value="">${libelleTous}</option>` +
+      valeurs.map(v => `<option value="${echapper(v)}">${echapper(v)}</option>`).join("");
+    if (valeurs.includes(actuelle)) select.value = actuelle;
+  }
+
+  function uniques(cle) {
+    return [...new Set(candidatures.map(c => c[cle]))].sort(collator.compare);
+  }
+
+  // ===== Rendu =====
+  function majFiltres() {
+    remplirSelect($("f-statut"), Object.keys(STATUTS), "Tous");
+    remplirSelect($("f-secteur"), uniques("secteur"), "Tous");
+    remplirSelect($("f-entreprise"), uniques("entreprise"), "Toutes");
+    $("secteurs-list").innerHTML = uniques("secteur").map(s => `<option value="${echapper(s)}">`).join("");
+  }
+
+  function majCompteurs() {
+    $("c-total").textContent = candidatures.length;
+    $("c-refusee").textContent = candidatures.filter(c => c.statut === "Refusée").length;
+    $("c-examen").textContent = candidatures.filter(c => c.statut === "En cours d'examen").length;
+    $("c-validee").textContent = candidatures.filter(c => c.statut === "Validée").length;
+  }
+
+  function trier(liste, mode) {
+    const l = liste.slice();
+    switch (mode) {
+      case "date-asc": l.sort((a, b) => a.date.localeCompare(b.date)); break;
+      case "secteur": l.sort((a, b) => collator.compare(a.secteur, b.secteur) || b.date.localeCompare(a.date)); break;
+      case "entreprise": l.sort((a, b) => collator.compare(a.entreprise, b.entreprise) || b.date.localeCompare(a.date)); break;
+      case "trajet": l.sort((a, b) => (Number(a.trajet) - Number(b.trajet)) || b.date.localeCompare(a.date)); break;
+      default: l.sort((a, b) => b.date.localeCompare(a.date));
+    }
+    return l;
+  }
+
+  function afficher() {
+    const q = normaliser($("f-search").value.trim());
+    const fStatut = $("f-statut").value;
+    const fSecteur = $("f-secteur").value;
+    const fEntreprise = $("f-entreprise").value;
+
+    // Le temps de trajet sert uniquement au tri, jamais au filtrage.
+    const filtrees = candidatures
+      .map((c, index) => ({ ...c, index }))
+      .filter(c => !fStatut || c.statut === fStatut)
+      .filter(c => !fSecteur || c.secteur === fSecteur)
+      .filter(c => !fEntreprise || c.entreprise === fEntreprise)
+      .filter(c => !q || normaliser([c.poste, c.entreprise, c.secteur, c.ville, c.statut].join(" ")).includes(q));
+
+    const liste = trier(filtrees, $("sort").value);
+    $("result-count").textContent = `${liste.length} candidature${liste.length > 1 ? "s" : ""} affichée${liste.length > 1 ? "s" : ""} sur ${candidatures.length}`;
+
+    if (!liste.length) {
+      $("list").innerHTML = `<div class="empty">Aucune candidature ne correspond à ces critères.</div>`;
+      return;
+    }
+
+    $("list").innerHTML = liste.map(c => {
+      const cls = STATUTS[c.statut] || "";
+      return `<article class="card ${cls}">
+        <div class="card-head">
+          <div>
+            <h3>${echapper(c.poste)}</h3>
+            <div class="company">${echapper(c.entreprise)}</div>
+          </div>
+          <span class="badge ${cls}">${echapper(c.statut)}</span>
+        </div>
+        <div class="meta">
+          <span class="chip">🏷️ ${echapper(c.secteur)}</span>
+          <span class="chip">📍 ${echapper(c.ville)}</span>
+          <span class="chip" title="Depuis ${echapper(DOMICILE)}">🚌 ${echapper(c.trajet)} min</span>
+        </div>
+        <div class="card-foot">
+          <small class="company">Candidature du ${echapper(formaterDate(c.date))}</small>
+          <button type="button" class="btn-del" data-index="${c.index}" aria-label="Supprimer">Supprimer</button>
+        </div>
+      </article>`;
+    }).join("");
+  }
+
+  function toutRafraichir() {
+    majFiltres();
+    majCompteurs();
+    afficher();
+  }
+
+  // ===== Événements =====
+  $("domicile-label").textContent = DOMICILE;
+  $("add-statut").innerHTML = Object.keys(STATUTS).map(s => `<option value="${echapper(s)}">${echapper(s)}</option>`).join("");
+  $("add-statut").value = "En cours d'examen";
+
+  ["f-search", "sort", "f-statut", "f-secteur", "f-entreprise"].forEach(id => {
+    $(id).addEventListener("input", afficher);
+    $(id).addEventListener("change", afficher);
+  });
+
+  $("list").addEventListener("click", e => {
+    const btn = e.target.closest(".btn-del");
+    if (!btn) return;
+    const i = Number(btn.dataset.index);
+    if (confirm(`Supprimer « ${candidatures[i].poste} — ${candidatures[i].entreprise} » ?`)) {
+      candidatures.splice(i, 1);
+      sauvegarder();
+      toutRafraichir();
+    }
+  });
+
+  $("add-form").addEventListener("submit", e => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    candidatures.push({
+      poste: f.get("poste").trim(),
+      entreprise: f.get("entreprise").trim(),
+      secteur: f.get("secteur").trim(),
+      ville: f.get("ville").trim(),
+      date: f.get("date"),
+      trajet: Math.max(0, Number(f.get("trajet")) || 0),
+      statut: f.get("statut")
+    });
+    sauvegarder();
+    e.target.reset();
+    $("add-statut").value = "En cours d'examen";
+    toutRafraichir();
+  });
+
+  $("reset").addEventListener("click", () => {
+    if (!confirm("Remplacer toutes les candidatures par les données d'exemple ?")) return;
+    candidatures = EXEMPLES.map(c => ({ ...c }));
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignoré */ }
+    toutRafraichir();
+  });
+
+  toutRafraichir();
+</script>
+</body>
+</html>
