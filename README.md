@@ -6,9 +6,9 @@ Maquette d'un outil simple pour suivre ses candidatures à des offres d'emploi. 
 
 - **Statuts** colorés : « Refusée » (rouge), « En cours d'examen » (orange), « Validée » (vert), avec compteurs par statut et total.
 - **Tri** par date (plus récente / plus ancienne), par secteur, par entreprise et par temps de trajet depuis le domicile (le plus court d'abord).
-- **Filtres** par statut, secteur et entreprise, plus une recherche texte. Le temps de trajet sert uniquement au tri, pas au filtrage.
+- **Filtres** par statut, secteur, entreprise, type de contrat et source, plus une recherche texte. Le temps de trajet sert uniquement au tri, pas au filtrage.
 - **Lecture seule** : seules les candidatures du fichier chiffré sont affichées (pas d'ajout ni de suppression depuis le site).
-- **Bandeau d'alerte** rouge : échéances (`date_limite`) dans les 7 prochains jours ou dépassées pour une candidature encore en cours d'examen, et relances dues. Badge « ⏰ Échéance J-n » sur les cartes.
+- **Bouton « 🔴 À traiter (n) »** rouge, replié par défaut (masqué si n = 0) : un clic affiche la liste des échéances (`date_limite`) dans les 7 prochains jours ou dépassées pour une candidature encore en cours d'examen, et des relances dues ; un nouveau clic, « Fermer » ou Échap la replie. Badge « ⏰ Échéance J-n » sur les cartes.
 - **Récap de la semaine** (repliable) : candidatures envoyées et changements de statut des 7 derniers jours (aujourd'hui inclus, d'après `historique`), relances en retard ou prévues dans les 7 prochains jours.
 - **Chances de réponse (estimation)** : score indicatif de 5 à 100 pour les candidatures en cours d'examen, affiché sur chaque carte, dans un classement et comme option de tri. Ce n'est **pas une probabilité réelle**. Règles : « Validée » = réponse positive (en tête, sans score) ; « Refusée » = 0, exclue ; « En cours d'examen » : base 50, −2 points par jour au-delà de 7 jours depuis la candidature, +10 si recruteur connu, +10 si la source est une agence d'emploi ou d'intérim, −10 si candidature spontanée, +5 si une relance est prévue, résultat borné entre 5 et 100. Le secteur n'est pas utilisé. La formule est dans la fonction `chancesReponse` de `index.html`.
 - **Détails** dépliables par carte, badge « À relancer » et compteur associé, marqueur « à vérifier » pour les entrées signalées `ambigu`.

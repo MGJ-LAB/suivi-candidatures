@@ -82,8 +82,16 @@
   .card dl { display: grid; grid-template-columns: max-content 1fr; gap: .2rem .6rem; margin: .5rem 0 0; }
   .card dt { color: var(--muted); }
   .card dd { margin: 0; overflow-wrap: anywhere; }
-  .alertes { background: #fef2f2; border: 2px solid var(--red); color: #7f1d1d; border-radius: 12px; padding: .8rem 1rem; margin-bottom: 1rem; }
-  .alertes h2 { margin: 0 0 .4rem; font-size: 1.05rem; color: var(--red); }
+  .alerte-wrap { margin-bottom: 1rem; }
+  .pill-alerte { background: var(--red); color: #fff; font-weight: 700; border-radius: 999px; padding: .4rem .9rem; font-size: .9rem; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+  .pill-alerte:hover { background: #b91c1c; }
+  .pill-alerte:focus-visible, .alertes-close:focus-visible { outline: 3px solid #fca5a5; outline-offset: 2px; }
+  .pill-alerte[aria-expanded="true"] { background: #991b1b; }
+  .alertes { background: #fef2f2; border: 2px solid var(--red); color: #7f1d1d; border-radius: 12px; padding: .7rem 1rem; margin-top: .5rem; max-height: 50vh; overflow-y: auto; }
+  .alertes-head { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+  .alertes h2 { margin: 0; font-size: 1rem; color: var(--red); }
+  .alertes-close { background: transparent; color: var(--red); border: 1px solid #fca5a5; padding: .25rem .6rem; font-size: .82rem; }
+  .alertes-close:hover { background: #fee2e2; }
   .alertes h3 { margin: .5rem 0 .2rem; font-size: .92rem; }
   .alertes ul, .recap ul, .chances ol { margin: .2rem 0 .4rem; padding-left: 1.2rem; font-size: .88rem; }
   .panel > summary { cursor: pointer; font-weight: 700; font-size: 1.05rem; }
@@ -130,7 +138,16 @@
 <main>
   <div class="banner" role="note"><strong>Accès protégé</strong> — données chiffrées, déchiffrées uniquement dans ce navigateur. Consultation en lecture seule.</div>
 
-  <section class="alertes" id="alertes" role="alert" hidden></section>
+  <div class="alerte-wrap" id="alerte-wrap" hidden>
+    <button type="button" class="pill-alerte" id="alerte-btn" aria-expanded="false" aria-controls="alertes">🔴 À traiter (<span id="alerte-count">0</span>)</button>
+    <section class="alertes" id="alertes" aria-label="À traiter" hidden>
+      <div class="alertes-head">
+        <h2>À traiter rapidement</h2>
+        <button type="button" class="alertes-close" id="alerte-close" aria-label="Fermer la liste À traiter">✕ Fermer</button>
+      </div>
+      <div id="alertes-contenu"></div>
+    </section>
+  </div>
 
   <details class="panel recap" id="recap-panel" open>
     <summary>Récap de la semaine</summary>
@@ -529,17 +546,25 @@
     ? `<ul>${items.map(c => `<li>${rendu(c)}</li>`).join("")}</ul>` : `<p class="muted">${siVide}</p>`;
 
   // Bandeau rouge : échéances proches ou dépassées, et relances dues.
+  // Bouton « À traiter (n) » : échéances proches ou dépassées + relances dues, liste repliée par défaut.
+  function basculerAlertes(ouvrir) {
+    $("alertes").hidden = !ouvrir;
+    $("alerte-btn").setAttribute("aria-expanded", String(ouvrir));
+  }
+
   function majAlertes() {
     const today = aujourdhui();
     const ech = candidatures.map(c => ({ c, e: echeance(c) })).filter(x => x.e).sort((a, b) => a.e.n - b.e.n);
     const rel = candidatures.filter(aRelancer).sort((a, b) => a.date_relance.localeCompare(b.date_relance));
-    const box = $("alertes");
-    if (!ech.length && !rel.length) { box.hidden = true; box.innerHTML = ""; return; }
-    box.hidden = false;
-    box.innerHTML = `<h2>⚠️ À traiter rapidement</h2>` +
+    const total = ech.length + rel.length;
+    $("alerte-count").textContent = total;
+    $("alerte-btn").setAttribute("aria-label", `À traiter : ${total} élément${total > 1 ? "s" : ""} (${ech.length} échéance${ech.length > 1 ? "s" : ""}, ${rel.length} relance${rel.length > 1 ? "s" : ""})`);
+    if (!total) { $("alerte-wrap").hidden = true; $("alertes-contenu").innerHTML = ""; basculerAlertes(false); return; }
+    $("alerte-wrap").hidden = false;
+    $("alertes-contenu").innerHTML =
       (ech.length ? `<h3>Échéances (date limite dans les 7 jours ou dépassée)</h3><ul>${ech.map(({ c, e }) =>
         `<li><strong>${e.texte}</strong> — ${libelle(c)} (${echapper(formaterDate(c.date_limite))}${e.n < 0 ? `, dépassée de ${-e.n} j` : ""})</li>`).join("")}</ul>` : "") +
-      (rel.length ? `<h3>Relances dues</h3><ul>${rel.map(c =>
+      (rel.length ? `<h3>Relances dues (${rel.length})</h3><ul>${rel.map(c =>
         `<li>${libelle(c)} — relance prévue le ${echapper(formaterDate(c.date_relance))} (${enJours(ecartJours(today, c.date_relance))})</li>`).join("")}</ul>` : "");
   }
 
@@ -644,7 +669,8 @@
     candidatures = [];
     $("list").innerHTML = "";
     $("recap").innerHTML = ""; $("chances").innerHTML = "";
-    $("alertes").innerHTML = ""; $("alertes").hidden = true;
+    $("alertes-contenu").innerHTML = ""; $("alerte-count").textContent = "0";
+    basculerAlertes(false); $("alerte-wrap").hidden = true;
     $("f-search").value = "";
     ["f-statut", "f-secteur", "f-entreprise", "f-contrat", "f-source"].forEach(id => { $(id).innerHTML = ""; });
     $("result-count").textContent = "";
@@ -658,6 +684,12 @@
 
   // ===== Événements du tableau de bord =====
   $("domicile-label").textContent = DOMICILE;
+
+  $("alerte-btn").addEventListener("click", () => basculerAlertes($("alertes").hidden));
+  $("alerte-close").addEventListener("click", () => { basculerAlertes(false); $("alerte-btn").focus(); });
+  $("alertes").addEventListener("keydown", e => {
+    if (e.key === "Escape") { basculerAlertes(false); $("alerte-btn").focus(); }
+  });
 
   ["f-search", "sort", "f-statut", "f-secteur", "f-entreprise", "f-contrat", "f-source"].forEach(id => {
     $(id).addEventListener("input", afficher);
